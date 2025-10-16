@@ -49,23 +49,23 @@ frontend/
 ## 🚀 Deployment
 
 1. Install dependencies  
-   ```bash
-   npm install
+```bash
+npm install
 ````
 
 2. Run locally
 
-   ```bash
-   npm run dev
-   ```
+```bash
+npm run dev
+ ```
 3. Build for GitHub Pages
 
-   ```bash
+```bash
    npm run build
    cp -r dist/* ../docs/
    git add ../docs && git commit -m "Deploy"
    git push
-   ```
+```
 
 Then enable **GitHub Pages** → *Source: main / docs*.
 
