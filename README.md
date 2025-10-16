@@ -29,3 +29,62 @@ STARK turns complex performance data into an elegant dashboard where users can e
 
 ## 🧮 Architecture
 
+```
+
+frontend/
+├── public/              # index.html, manifest, service worker
+├── src/
+│   ├── components/      # UI cards, charts, header
+│   ├── data/            # normative data & samples
+│   ├── logic/           # scoring, vo2max, utils
+│   ├── hooks/           # localStorage + theme
+│   ├── pages/           # main dashboard
+│   └── main.jsx
+└── docs/                # build output for GitHub Pages
+
+````
+
+---
+
+## 🚀 Deployment
+
+1. Install dependencies  
+   ```bash
+   npm install
+````
+
+2. Run locally
+
+   ```bash
+   npm run dev
+   ```
+3. Build for GitHub Pages
+
+   ```bash
+   npm run build
+   cp -r dist/* ../docs/
+   git add ../docs && git commit -m "Deploy"
+   git push
+   ```
+
+Then enable **GitHub Pages** → *Source: main / docs*.
+
+---
+
+## 🧠 Future Work
+
+* Enhanced visualization of progress trends
+* Custom user profiles
+* Expanded normative datasets
+* Optional API integration for wearable sync
+
+---
+
+### License
+
+MIT © 2025 STARK Project
+
+---
+
+> “Build a little church, not a cathedral.”
+> Simple tools for understanding complex bodies.
