@@ -5,6 +5,55 @@ import { Moon, Sun, Download, Activity, Zap, Battery, Droplet, Heart, TrendingUp
 const ThemeContext = createContext();
 const DataContext = createContext();
 
+const domainConfig = [
+  { key: 'Strength', label: 'Strength', icon: Activity },
+  { key: 'Endurance', label: 'Endurance', icon: Heart },
+  { key: 'Power', label: 'Power', icon: Zap },
+  { key: 'Mobility', label: 'Mobility', icon: TrendingUp },
+  { key: 'BodyComp', label: 'Body Comp', icon: Droplet },
+  { key: 'Recovery', label: 'Recovery', icon: Battery }
+];
+
+const domainKeys = domainConfig.map(({ key }) => key);
+const domainLabels = domainConfig.reduce((acc, { key, label }) => {
+  acc[key] = label;
+  return acc;
+}, {});
+
+const legacyDomainKeyMap = {
+  strength: 'Strength',
+  endurance: 'Endurance',
+  power: 'Power',
+  mobility: 'Mobility',
+  bodyComp: 'BodyComp',
+  recovery: 'Recovery'
+};
+
+const defaultUserData = {
+  age: 26,
+  gender: 'male',
+  vo2max: 52,
+  Strength: 50,
+  Endurance: 45,
+  Power: 40,
+  Mobility: 55,
+  BodyComp: 60,
+  Recovery: 50
+};
+
+const migrateUserData = (data = {}) => {
+  const migrated = { ...data };
+
+  Object.entries(legacyDomainKeyMap).forEach(([oldKey, newKey]) => {
+    if (oldKey in migrated && !(newKey in migrated)) {
+      migrated[newKey] = migrated[oldKey];
+    }
+    delete migrated[oldKey];
+  });
+
+  return { ...defaultUserData, ...migrated };
+};
+
 const ThemeProvider = ({ children }) => {
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem('starkDarkMode');
@@ -30,17 +79,15 @@ const ThemeProvider = ({ children }) => {
 const DataProvider = ({ children }) => {
   const [userData, setUserData] = useState(() => {
     const saved = localStorage.getItem('starkUserData');
-    return saved ? JSON.parse(saved) : {
-      age: 26,
-      gender: 'male',
-      vo2max: 52,
-      strength: 50,
-      endurance: 45,
-      power: 40,
-      mobility: 55,
-      bodyComp: 60,
-      recovery: 50
-    };
+    if (saved) {
+      try {
+        return migrateUserData(JSON.parse(saved));
+      } catch (error) {
+        console.error('Failed to parse saved user data, using defaults.', error);
+        return defaultUserData;
+      }
+    }
+    return defaultUserData;
   });
 
   useEffect(() => {
@@ -61,12 +108,12 @@ const normativeData = {
   lastUpdated: '2024-10',
   source: 'ACSM Guidelines, 11th Ed.',
   domains: {
-    strength: { weight: 0.25, mean: 50, std: 15 },
-    endurance: { weight: 0.20, mean: 45, std: 12 },
-    power: { weight: 0.15, mean: 40, std: 10 },
-    mobility: { weight: 0.15, mean: 55, std: 14 },
-    bodyComp: { weight: 0.15, mean: 60, std: 18 },
-    recovery: { weight: 0.10, mean: 50, std: 13 }
+    Strength: { weight: 0.25, mean: 50, std: 15 },
+    Endurance: { weight: 0.20, mean: 45, std: 12 },
+    Power: { weight: 0.15, mean: 40, std: 10 },
+    Mobility: { weight: 0.15, mean: 55, std: 14 },
+    BodyComp: { weight: 0.15, mean: 60, std: 18 },
+    Recovery: { weight: 0.10, mean: 50, std: 13 }
   },
   vo2maxNorms: {
     male: { 20: 55, 30: 52, 40: 48, 50: 45, 60: 42, 70: 38 },
@@ -96,7 +143,7 @@ const getPerformanceLabel = (percentile) => {
 const calculateFitnessIndex = (domainScores) => {
   let totalScore = 0;
   Object.entries(normativeData.domains).forEach(([domain, config]) => {
-    const score = domainScores[domain] || 50;
+    const score = domainScores[domain] ?? defaultUserData[domain];
     totalScore += score * config.weight;
   });
   return Math.round(totalScore);
@@ -116,8 +163,8 @@ const calculateFitnessAge = (age, vo2max, gender) => {
 
 // ==================== COMPONENTS ====================
 const SpiderChart = ({ data, darkMode }) => {
-  const domains = ['strength', 'endurance', 'power', 'mobility', 'bodyComp', 'recovery'];
-  const labels = ['Strength', 'Endurance', 'Power', 'Mobility', 'Body Comp', 'Recovery'];
+  const domains = domainKeys;
+  const labels = domains.map((key) => domainLabels[key]);
   const size = 400;
   const center = size / 2;
   const maxRadius = 160;
@@ -213,16 +260,16 @@ const SpiderChart = ({ data, darkMode }) => {
   );
 };
 
-const DomainCard = ({ domain, score, percentile, zScore, icon: Icon }) => {
+const DomainCard = ({ label, score, percentile, zScore, icon: Icon }) => {
   const perfLabel = getPerformanceLabel(percentile);
-  
+
   return (
     <div className="bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 transition-opacity">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <Icon className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-          <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 capitalize">
-            {domain === 'bodyComp' ? 'Body Comp' : domain}
+          <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">
+            {label}
           </h3>
         </div>
         <span className="text-xl font-bold text-gray-900 dark:text-white">
@@ -269,10 +316,10 @@ const FitnessModule = () => {
     const domainZScores = {};
 
     Object.entries(normativeData.domains).forEach(([domain, config]) => {
-      const value = userData[domain];
+      const value = userData[domain] ?? defaultUserData[domain];
       const z = calculateZScore(value, config.mean, config.std);
       const percentile = zScoreToPercentile(z);
-      
+
       domainScores[domain] = value;
       domainPercentiles[domain] = percentile;
       domainZScores[domain] = z;
@@ -293,15 +340,6 @@ const FitnessModule = () => {
   const updateField = (field, value) => {
     setUserData(prev => ({ ...prev, [field]: parseFloat(value) || 0 }));
   };
-
-  const domainConfig = [
-    { key: 'strength', icon: Activity },
-    { key: 'endurance', icon: Heart },
-    { key: 'power', icon: Zap },
-    { key: 'mobility', icon: TrendingUp },
-    { key: 'bodyComp', icon: Droplet },
-    { key: 'recovery', icon: Battery }
-  ];
 
   return (
     <>
@@ -392,10 +430,10 @@ const FitnessModule = () => {
       <div className="bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5 mb-6">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Domain Metrics</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {domainConfig.map(({ key }) => (
+          {domainConfig.map(({ key, label }) => (
             <div key={key}>
               <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-2">
-                {key === 'bodyComp' ? 'Body Comp' : key}
+                {label}
               </label>
               <input
                 type="number"
@@ -411,13 +449,13 @@ const FitnessModule = () => {
       {/* Domain Cards */}
       {results && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {domainConfig.map(({ key, icon }) => (
+          {domainConfig.map(({ key, label, icon }) => (
             <DomainCard
               key={key}
-              domain={key}
               score={userData[key]}
               percentile={results.domains[key]}
               zScore={results.zScores[key]}
+              label={label}
               icon={icon}
             />
           ))}
@@ -438,7 +476,7 @@ const Shell = ({ children }) => {
     const domainZScores = {};
 
     Object.entries(normativeData.domains).forEach(([domain, config]) => {
-      const value = userData[domain];
+      const value = userData[domain] ?? defaultUserData[domain];
       const z = calculateZScore(value, config.mean, config.std);
       const percentile = zScoreToPercentile(z);
       
