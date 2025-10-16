@@ -10,7 +10,7 @@ const domainConfig = [
   { key: 'Endurance', label: 'Endurance', icon: Heart },
   { key: 'Power', label: 'Power', icon: Zap },
   { key: 'Mobility', label: 'Mobility', icon: TrendingUp },
-  { key: 'BodyComp', label: 'Body Comp', icon: Droplet },
+  { key: 'BodyComposition', label: 'Body Composition', icon: Droplet },
   { key: 'Recovery', label: 'Recovery', icon: Battery }
 ];
 
@@ -25,7 +25,10 @@ const legacyDomainKeyMap = {
   endurance: 'Endurance',
   power: 'Power',
   mobility: 'Mobility',
-  bodyComp: 'BodyComp',
+  BodyComp: 'BodyComposition',
+  bodyComp: 'BodyComposition',
+  body_composition: 'BodyComposition',
+  bodycomposition: 'BodyComposition',
   recovery: 'Recovery'
 };
 
@@ -37,7 +40,7 @@ const defaultUserData = {
   Endurance: 45,
   Power: 40,
   Mobility: 55,
-  BodyComp: 60,
+  BodyComposition: 60,
   Recovery: 50
 };
 
@@ -112,7 +115,7 @@ const normativeData = {
     Endurance: { weight: 0.20, mean: 45, std: 12 },
     Power: { weight: 0.15, mean: 40, std: 10 },
     Mobility: { weight: 0.15, mean: 55, std: 14 },
-    BodyComp: { weight: 0.15, mean: 60, std: 18 },
+    BodyComposition: { weight: 0.15, mean: 60, std: 18 },
     Recovery: { weight: 0.10, mean: 50, std: 13 }
   },
   vo2maxNorms: {

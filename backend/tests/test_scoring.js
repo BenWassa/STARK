@@ -11,7 +11,7 @@ const userData = {
     Endurance: 72,
     Power: 80,
     Mobility: 58,
-    BodyComp: 75,
+    BodyComposition: 75,
     Recovery: 68
   }
 };

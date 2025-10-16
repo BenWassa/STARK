@@ -4,7 +4,7 @@
     "Endurance": 0.25,
     "Power": 0.15,
     "Mobility": 0.10,
-    "BodyComp": 0.15,
+    "BodyComposition": 0.15,
     "Recovery": 0.15
   },
   "vo2maxNorms": {
