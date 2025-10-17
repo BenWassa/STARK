@@ -546,6 +546,9 @@ const Onboarding = ({ onComplete }) => {
         
         {/* Glowing Dots */}
         <div className="glowing-dots" aria-hidden="true"></div>
+
+        {/* Floating Emblem */}
+        <div className="onboarding-emblem" aria-hidden="true"></div>
       </div>
 
       <div className="max-w-2xl w-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-lg shadow-2xl relative z-10">
