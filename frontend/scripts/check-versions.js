@@ -51,6 +51,7 @@ function checkVersions() {
   let hasErrors = false;
 
   console.log('🔍 Checking version consistency...\n');
+  console.log('📦 STARK Version Validator');
   console.log('Current working directory:', process.cwd());
 
   for (const file of versionFiles) {

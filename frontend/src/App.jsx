@@ -113,7 +113,7 @@ const DataProvider = ({ children, isDevMode }) => {
   }, [userData, isLoading]);
 
   return (
-    <DataContext.Provider value={{ userData, setUserData, isLoading, isDevMode, clearAllAppData }}>
+    <DataContext.Provider value={{ userData, setUserData, isLoading, isDevMode }}>
       {children}
     </DataContext.Provider>
   );
