@@ -3,7 +3,7 @@
  * Extracted from App.jsx for better organization
  */
 
-import { Activity, Heart, Zap, TrendingUp, Droplet, Battery } from 'lucide-react';
+import { Heart, Zap, TrendingUp, Droplet, Battery } from 'lucide-react';
 import { buildNormativeData } from './norms';
 
 // Import normative data
@@ -111,7 +111,7 @@ export const calculateUserResults = (userData) => {
  */
 export const getDomainConfig = () => {
   return [
-    { key: 'strength', icon: Activity },
+  { key: 'strength', icon: TrendingUp },
     { key: 'endurance', icon: Heart },
     { key: 'power', icon: Zap },
     { key: 'mobility', icon: TrendingUp },

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, createContext, useContext, useRef } from 'react';
-import { Moon, Sun, Download, Activity, Zap, Battery, Droplet, Heart, TrendingUp, Trash2, Ruler, Play, Database, Upload, X, Info, Menu } from 'lucide-react';
+import { Moon, Sun, Download, Zap, Battery, Droplet, Heart, TrendingUp, Trash2, Ruler, Play, Database, Upload, X, Info, Menu } from 'lucide-react';
 import normativeDataRaw from './data/exercise_metrics.json' assert { type: 'json' };
 import { buildNormativeData } from './utils/norms';
 
@@ -555,13 +555,13 @@ const Shell = ({ children }) => {
               <button
                 type="button"
                 onClick={() => setIsSideNavOpen(true)}
-                className="p-2 rounded-full border border-blue-100 dark:border-blue-900/40 bg-white/80 dark:bg-gray-900/60 shadow-sm hover:shadow-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex items-center justify-center p-2 rounded-full border border-blue-100 dark:border-blue-900/40 bg-white/80 dark:bg-gray-900/60 shadow-sm hover:shadow-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
                 aria-label="Open STARK navigation"
               >
                 <Menu className="w-5 h-5 text-blue-600 dark:text-blue-400" />
               </button>
               <div className="flex items-center gap-3">
-                <Activity className="w-7 h-7 text-blue-600 dark:text-blue-400" />
+                {/* Activity icon removed per design — kept space for branding */}
                 <div className="flex flex-col">
                   <h1 className="text-xl font-bold text-gray-900 dark:text-white">STARK</h1>
                   <div className="flex items-center gap-2">
@@ -654,7 +654,7 @@ const Shell = ({ children }) => {
           <aside className="relative w-80 sm:w-96 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 shadow-2xl transform transition-transform duration-200 ease-out">
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-gray-800">
               <div className="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-gray-100">
-                <Activity className="w-4 h-4 text-blue-500" />
+                {/* Activity icon removed */}
                 <span>STARK Console</span>
               </div>
               <button
@@ -760,25 +760,20 @@ const App = () => {
     console.log(`📊 Dataset: ${normativeData.source} v${normativeData.version}`);
     console.log(`📅 Build: ${normativeData.lastUpdated}`);
     
-    // Check for dev mode (URL parameter or localStorage)
+    // Check for dev mode using the URL parameter only. We intentionally
+    // avoid persisting dev mode to localStorage so visiting `dev.html`
+    // doesn't toggle dev mode globally for `index.html`.
     const urlParams = new URLSearchParams(window.location.search);
     const devParam = urlParams.get('dev');
-    const devStorage = localStorage.getItem('starkDevMode');
-    
-    console.log('🔍 Dev mode check:', { 
-      search: window.location.search, 
-      devParam, 
-      devStorage,
-      currentUrl: window.location.href 
-    });
-    
-    if (devParam === 'true' || devStorage === 'true') {
+
+    console.log('🔍 Dev mode check:', { search: window.location.search, devParam, currentUrl: window.location.href });
+
+    if (devParam === 'true') {
       setIsDevMode(true);
-      localStorage.setItem('starkDevMode', 'true');
-      console.log('🛠️ STARK Dev Mode Activated!');
+      console.log('🛠️ STARK Dev Mode Activated (URL param)');
       console.log('   Features: Skip onboarding, dev tools in header');
       console.log('   Tools: Clear Data (🗑️), Run Onboarding (▶️), Load Mock Data (🗄️)');
-      console.log('   To disable: localStorage.removeItem("starkDevMode") or remove ?dev=true');
+      console.log('   To disable: remove ?dev=true from the URL');
     } else {
       console.log('❌ Dev mode not activated');
     }
@@ -856,8 +851,8 @@ const App = () => {
   if (appLoading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <Activity className="w-8 h-8 text-blue-500 animate-spin mx-auto mb-4" />
+          <div className="text-center">
+          {/* Loading spinner removed for simpler dev UI */}
           <p className="text-gray-600 dark:text-gray-400">Loading STARK...</p>
         </div>
       </div>
