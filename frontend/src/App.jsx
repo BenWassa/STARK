@@ -1,5 +1,5 @@
 import React, { useState, useEffect, createContext, useContext } from 'react';
-import { Moon, Sun, Download, Activity, Zap, Battery, Droplet, Heart, TrendingUp, Trash2, Ruler } from 'lucide-react';
+import { Moon, Sun, Download, Activity, Zap, Battery, Droplet, Heart, TrendingUp, Trash2, Ruler, Play, Database } from 'lucide-react';
 import normativeDataRaw from './data/exercise_metrics.json' assert { type: 'json' };
 import { calculateZScore, zScoreToPercentile, getPerformanceLabel, calculateFitnessIndex, calculateFitnessAge, calculateUserResults, getDomainConfig, exportUserData } from './utils/calculations';
 import { saveUserData, loadUserData, saveAppState, loadAppState, exportAllData, clearAllData } from './utils/storage';
@@ -457,6 +457,24 @@ const Shell = ({ children }) => {
                   <Trash2 className="w-5 h-5 text-red-600 dark:text-red-400" />
                 </button>
               )}
+              {isDevMode && (
+                <button
+                  onClick={runOnboarding}
+                  className="p-2 rounded hover:bg-blue-100 dark:hover:bg-blue-900 transition-colors"
+                  title="🛠️ DEV: Run Onboarding"
+                >
+                  <Play className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                </button>
+              )}
+              {isDevMode && (
+                <button
+                  onClick={loadMockData}
+                  className="p-2 rounded hover:bg-green-100 dark:hover:bg-green-900 transition-colors"
+                  title="🛠️ DEV: Load Mock Data"
+                >
+                  <Database className="w-5 h-5 text-green-600 dark:text-green-400" />
+                </button>
+              )}
               <button
                 onClick={() => setDarkMode(!darkMode)}
                 className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
@@ -495,7 +513,7 @@ const Shell = ({ children }) => {
 const App = () => {
   const [onboardingComplete, setOnboardingComplete] = useState(false);
   const [appLoading, setAppLoading] = useState(true);
-  const [isDevMode, setIsDevMode] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
     // Check for dev mode (URL parameter or localStorage)
@@ -509,6 +527,27 @@ const App = () => {
       console.log('🛠️ STARK Dev Mode Enabled');
     }
   }, []);
+
+  const loadMockData = () => {
+    const mockData = {
+      age: 28,
+      gender: 'male',
+      vo2max: 48,
+      measurementSystem: 'metric',
+      strength: 75,
+      endurance: 68,
+      power: 72,
+      mobility: 65,
+      bodyComp: 58,
+      recovery: 70
+    };
+    setUserData(mockData);
+    console.log('🎭 Mock data loaded:', mockData);
+  };
+
+  const runOnboarding = () => {
+    setShowOnboarding(true);
+  };
 
   const clearAllAppData = async () => {
     if (window.confirm('⚠️ Clear ALL app data? This cannot be undone!\n\nThis will reset onboarding, user data, and all settings.')) {
@@ -569,11 +608,24 @@ const App = () => {
     );
   }
 
-  if (!onboardingComplete) {
+  if (!onboardingComplete && !isDevMode) {
     return (
       <ThemeProvider>
         <DataProvider>
           <Onboarding onComplete={handleOnboardingComplete} />
+        </DataProvider>
+      </ThemeProvider>
+    );
+  }
+
+  if (showOnboarding) {
+    return (
+      <ThemeProvider>
+        <DataProvider>
+          <Onboarding onComplete={() => {
+            setShowOnboarding(false);
+            handleOnboardingComplete();
+          }} />
         </DataProvider>
       </ThemeProvider>
     );
