@@ -5,6 +5,9 @@ const DISMISSED_UPDATE_KEY = 'stark_dismissed_update';
 
 export const checkForUpdates = async (currentVersion) => {
   try {
+    // Skip version checks in dev mode to avoid confusing update banners during local development
+    const isDevMode = window.location.search.includes('dev=true') || localStorage.getItem('starkDevMode') === 'true';
+    if (isDevMode) return null;
     // Check if we should skip checking (recently checked)
     const lastCheck = localStorage.getItem(VERSION_STORAGE_KEY);
     const now = Date.now();
@@ -16,9 +19,18 @@ export const checkForUpdates = async (currentVersion) => {
     // Update last check time
     localStorage.setItem(VERSION_STORAGE_KEY, now.toString());
 
-    // For GitHub Pages deployment, check against a version.json file
-    // In production, this would be served from the same domain
-    const response = await fetch('/version.json', {
+    // Check for version.json - handle both dev and production paths
+    let versionUrl = '/version.json';
+    
+    // In dev mode, check if we're running from a local server and adjust path
+    if (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') {
+      // Check if we're in the docs folder (dev server setup)
+      if (window.location.pathname.includes('/docs/')) {
+        versionUrl = '/docs/version.json';
+      }
+    }
+    
+    const response = await fetch(versionUrl, {
       cache: 'no-cache',
       headers: {
         'Cache-Control': 'no-cache'
@@ -65,7 +77,11 @@ const checkGitHubForUpdates = async (currentVersion) => {
       }
     });
 
-    if (!response.ok) return null;
+    if (!response.ok) {
+      // If GitHub API fails (404, 403, etc.), silently fail and don't log error
+      // This is expected for private repos or non-existent repos
+      return null;
+    }
 
     const release = await response.json();
     const latestVersion = release.tag_name.replace('v', ''); // Remove 'v' prefix if present

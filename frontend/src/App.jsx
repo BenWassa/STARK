@@ -604,6 +604,13 @@ const FitnessModule = ({ updateAvailable, onUpdateClick, onDismissUpdate }) => {
 
   return (
     <>
+      {updateAvailable && (
+        <UpdateBanner
+          onUpdate={onUpdateClick}
+          onDismiss={onDismissUpdate}
+        />
+      )}
+
       {/* Summary Cards */}
       {results && (
         <div className="grid grid-cols-3 gap-3 mb-4">
@@ -942,13 +949,6 @@ const Shell = ({ children }) => {
           </div>
         </div>
       </header>
-
-      {updateAvailable && (
-        <UpdateBanner
-          onUpdate={onUpdateClick}
-          onDismiss={onDismissUpdate}
-        />
-      )}
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {children}
