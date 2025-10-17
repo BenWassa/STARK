@@ -1,5 +1,6 @@
 import React, { useState, useEffect, createContext, useContext, useRef } from 'react';
-import { Moon, Sun, Download, Zap, Battery, Droplet, Heart, TrendingUp, Trash2, Ruler, Play, Database, Upload, X, Info, Menu } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Moon, Sun, Download, Zap, Battery, Droplet, Heart, TrendingUp, Trash2, Ruler, Play, Database, Upload, X, Info, Menu, Edit } from 'lucide-react';
 import normativeDataRaw from './data/exercise_metrics.json' assert { type: 'json' };
 import { buildNormativeData } from './utils/norms';
 
@@ -76,7 +77,9 @@ const DataProvider = ({ children, isDevMode, runOnboarding, clearAllAppData, loa
     age: 26,
     gender: 'male',
     vo2max: 52,
+    birthdate: '', // YYYY-MM-DD format
     measurementSystem: 'metric', // 'metric' or 'imperial'
+    loggedExercises: {}, // { exerciseId: value }
     strength: 50,
     endurance: 45,
     power: 40,
@@ -283,6 +286,16 @@ const FitnessModule = () => {
   const { darkMode } = useContext(ThemeContext);
   const { userData, setUserData } = useContext(DataContext);
   const [results, setResults] = useState(null);
+  const [showProfileEditModal, setShowProfileEditModal] = useState(false);
+  const [tempBirthdate, setTempBirthdate] = useState('');
+  const [tempVo2max, setTempVo2max] = useState('');
+  const [showLogModal, setShowLogModal] = useState(false);
+  const [tempLifts, setTempLifts] = useState({
+    bench_press_1rm: '',
+    squat_1rm: '',
+    deadlift_1rm: '',
+    overhead_press_1rm: ''
+  });
 
   useEffect(() => {
     const results = calculateUserResults(userData);
@@ -300,88 +313,279 @@ const FitnessModule = () => {
       {/* Summary Cards */}
       {results && (
         <div className="grid grid-cols-3 gap-3 mb-4">
-          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-3 shadow-lg shadow-blue-500/10"
+          >
             <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
               Fitness Index
             </h3>
             <p className="text-2xl font-bold text-gray-900 dark:text-white">{results.fitnessIndex}</p>
             <p className="text-xs text-gray-500 dark:text-gray-400">Overall Score</p>
-          </div>
-          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3">
+          </motion.div>
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-3 shadow-lg shadow-blue-500/10"
+          >
             <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
               Fitness Age
             </h3>
             <p className="text-2xl font-bold text-gray-900 dark:text-white">{results.fitnessAge}</p>
             <p className="text-xs text-gray-500 dark:text-gray-400">Years</p>
-          </div>
-          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3">
+          </motion.div>
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-3 shadow-lg shadow-blue-500/10"
+          >
             <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
               VO₂max
             </h3>
             <p className="text-2xl font-bold text-gray-900 dark:text-white">{results.vo2max}</p>
             <p className="text-xs text-gray-500 dark:text-gray-400">mL/kg/min</p>
-          </div>
+          </motion.div>
         </div>
       )}
 
       {/* Spider Chart */}
       {results && (
-        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 mb-6">
+        <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-6 mb-6 shadow-lg shadow-blue-500/10">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 text-center">
             Domain Performance Overview
           </h2>
           <SpiderChart data={results.domains} darkMode={darkMode} />
-          <div className="text-xs text-gray-500 dark:text-gray-400 text-center mt-4">
-            Based on: <span className="font-semibold">{normativeData.source}</span><br/>
-            Dataset version {normativeData.version} • Updated {normativeData.lastUpdated}
+          <div className="flex justify-center mt-4">
+            <button
+              onClick={() => {
+                setTempLifts({
+                  bench_press_1rm: userData.loggedExercises?.bench_press_1rm || '',
+                  squat_1rm: userData.loggedExercises?.squat_1rm || '',
+                  deadlift_1rm: userData.loggedExercises?.deadlift_1rm || '',
+                  overhead_press_1rm: userData.loggedExercises?.overhead_press_1rm || ''
+                });
+                setShowLogModal(true);
+              }}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white rounded-2xl transition-all duration-200"
+            >
+              <Database className="w-4 h-4" />
+              Log New Lifts
+            </button>
           </div>
         </div>
       )}
 
       {/* User Profile */}
-      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5 mb-6">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Profile</h2>
+      <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-5 mb-6 shadow-lg shadow-blue-500/10">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Profile</h2>
+          <button
+            onClick={() => {
+              setTempBirthdate(userData.birthdate || '');
+              setTempVo2max(userData.vo2max || '');
+              setShowProfileEditModal(true);
+            }}
+            className="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-gradient-to-r from-blue-500 to-teal-500 hover:from-blue-600 hover:to-teal-600 text-white rounded-2xl transition-all duration-200"
+          >
+            <Edit className="w-4 h-4" />
+            Edit
+          </button>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-2">
               Age
             </label>
-            <input
-              type="number"
-              value={userData.age}
-              onChange={(e) => updateField('age', e.target.value)}
-              className="w-full px-3 py-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-            />
+            <p className="text-sm text-gray-900 dark:text-white py-2">
+              {userData.birthdate ? 
+                Math.floor((new Date() - new Date(userData.birthdate)) / (365.25 * 24 * 60 * 60 * 1000)) :
+                userData.age
+              } years old
+            </p>
           </div>
           <div>
             <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-2">
               Gender
             </label>
-            <select
-              value={userData.gender}
-              onChange={(e) => setUserData(prev => ({ ...prev, gender: e.target.value }))}
-              className="w-full px-3 py-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-            </select>
+            <p className="text-sm text-gray-900 dark:text-white py-2 capitalize">
+              {userData.gender}
+            </p>
           </div>
           <div>
             <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-2">
               VO₂max
             </label>
-            <input
-              type="number"
-              value={userData.vo2max}
-              onChange={(e) => updateField('vo2max', e.target.value)}
-              className="w-full px-3 py-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-            />
+            <p className="text-sm text-gray-900 dark:text-white py-2">
+              {userData.vo2max} ml/kg/min
+            </p>
           </div>
         </div>
       </div>
 
+      {/* Profile Edit Modal */}
+      {showProfileEditModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Edit Profile</h3>
+              <button
+                onClick={() => setShowProfileEditModal(false)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Birthdate
+                </label>
+                <input
+                  type="date"
+                  value={tempBirthdate}
+                  onChange={(e) => setTempBirthdate(e.target.value)}
+                  className="w-full px-3 py-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  VO₂max (ml/kg/min)
+                </label>
+                <input
+                  type="number"
+                  value={tempVo2max}
+                  onChange={(e) => setTempVo2max(e.target.value)}
+                  className="w-full px-3 py-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+            </div>
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setShowProfileEditModal(false)}
+                className="flex-1 px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-600 rounded-2xl hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  const newAge = tempBirthdate ? 
+                    Math.floor((new Date() - new Date(tempBirthdate)) / (365.25 * 24 * 60 * 60 * 1000)) : 
+                    userData.age;
+                  setUserData(prev => ({
+                    ...prev,
+                    birthdate: tempBirthdate,
+                    age: newAge,
+                    vo2max: parseFloat(tempVo2max) || prev.vo2max
+                  }));
+                  setShowProfileEditModal(false);
+                }}
+                className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-500 to-teal-500 hover:from-blue-600 hover:to-teal-600 text-white rounded-2xl transition-all duration-200"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Log Lifts Modal */}
+      {showLogModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4 max-h-[80vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Log New Lifts</h3>
+              <button
+                onClick={() => setShowLogModal(false)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Bench Press 1RM (kg)
+                </label>
+                <input
+                  type="number"
+                  value={tempLifts.bench_press_1rm}
+                  onChange={(e) => setTempLifts(prev => ({ ...prev, bench_press_1rm: e.target.value }))}
+                  placeholder="e.g. 80"
+                  className="w-full px-3 py-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Squat 1RM (kg)
+                </label>
+                <input
+                  type="number"
+                  value={tempLifts.squat_1rm}
+                  onChange={(e) => setTempLifts(prev => ({ ...prev, squat_1rm: e.target.value }))}
+                  placeholder="e.g. 100"
+                  className="w-full px-3 py-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Deadlift 1RM (kg)
+                </label>
+                <input
+                  type="number"
+                  value={tempLifts.deadlift_1rm}
+                  onChange={(e) => setTempLifts(prev => ({ ...prev, deadlift_1rm: e.target.value }))}
+                  placeholder="e.g. 120"
+                  className="w-full px-3 py-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Overhead Press 1RM (kg)
+                </label>
+                <input
+                  type="number"
+                  value={tempLifts.overhead_press_1rm}
+                  onChange={(e) => setTempLifts(prev => ({ ...prev, overhead_press_1rm: e.target.value }))}
+                  placeholder="e.g. 50"
+                  className="w-full px-3 py-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+            </div>
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setShowLogModal(false)}
+                className="flex-1 px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-600 rounded-2xl hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  setUserData(prev => ({
+                    ...prev,
+                    loggedExercises: {
+                      ...prev.loggedExercises,
+                      ...Object.fromEntries(
+                        Object.entries(tempLifts).filter(([_, value]) => value !== '')
+                      )
+                    }
+                  }));
+                  setShowLogModal(false);
+                }}
+                className="flex-1 px-4 py-2 bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white rounded-2xl transition-all duration-200"
+              >
+                Save Lifts
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Domain Inputs */}
-      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5 mb-6">
+      <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-5 mb-6 shadow-lg shadow-blue-500/10">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Domain Metrics</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {domainConfig.map(({ key }) => (
@@ -733,6 +937,11 @@ const Shell = ({ children }) => {
                     </dd>
                   </div>
                 </dl>
+                <div className="mt-4 text-xs text-gray-500 dark:text-gray-400">
+                  <p className="font-semibold">Dataset Information</p>
+                  <p>Based on: {normativeData.source}</p>
+                  <p>Dataset version {normativeData.version} • Updated {normativeData.lastUpdated}</p>
+                </div>
               </section>
             </div>
           </aside>
