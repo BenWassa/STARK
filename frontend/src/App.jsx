@@ -514,6 +514,7 @@ const App = () => {
   const [onboardingComplete, setOnboardingComplete] = useState(false);
   const [appLoading, setAppLoading] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [isDevMode, setIsDevMode] = useState(false);
 
   useEffect(() => {
     // Check for dev mode (URL parameter or localStorage)
