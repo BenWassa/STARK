@@ -1,5 +1,7 @@
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import { Moon, Sun, Download, Activity, Zap, Battery, Droplet, Heart, TrendingUp } from 'lucide-react';
+import normativeDataRaw from './data/normative_data.json' assert { type: 'json' };
+import { buildNormativeData } from './utils/norms';
 
 // ==================== CONTEXTS ====================
 const ThemeContext = createContext();
@@ -55,24 +57,7 @@ const DataProvider = ({ children }) => {
 };
 
 // ==================== DATA & SCORING ====================
-const normativeData = {
-  version: '1.1.0',
-  description: 'Normative data for fitness scoring based on ACSM guidelines',
-  lastUpdated: '2024-10',
-  source: 'ACSM Guidelines, 11th Ed.',
-  domains: {
-    strength: { weight: 0.25, mean: 50, std: 15 },
-    endurance: { weight: 0.20, mean: 45, std: 12 },
-    power: { weight: 0.15, mean: 40, std: 10 },
-    mobility: { weight: 0.15, mean: 55, std: 14 },
-    bodyComp: { weight: 0.15, mean: 60, std: 18 },
-    recovery: { weight: 0.10, mean: 50, std: 13 }
-  },
-  vo2maxNorms: {
-    male: { 20: 55, 30: 52, 40: 48, 50: 45, 60: 42, 70: 38 },
-    female: { 20: 49, 30: 46, 40: 42, 50: 39, 60: 36, 70: 33 }
-  }
-};
+const normativeData = buildNormativeData(normativeDataRaw);
 
 const calculateZScore = (value, mean, std) => {
   return (value - mean) / std;
@@ -104,14 +89,25 @@ const calculateFitnessIndex = (domainScores) => {
 
 const calculateFitnessAge = (age, vo2max, gender) => {
   const norms = normativeData.vo2maxNorms[gender];
-  const ages = Object.keys(norms).map(Number).sort((a, b) => a - b);
-  
-  for (let i = 0; i < ages.length; i++) {
-    if (vo2max >= norms[ages[i]]) {
-      return ages[i];
+
+  if (!norms || norms.length === 0) {
+    return age;
+  }
+
+  for (let i = 0; i < norms.length; i++) {
+    const group = norms[i];
+    if (group.mean === undefined) {
+      continue;
+    }
+
+    if (vo2max >= group.mean) {
+      return group.minAge ?? age;
     }
   }
-  return ages[ages.length - 1] + 5;
+
+  const lastGroup = norms[norms.length - 1];
+  const fallbackAge = lastGroup.maxAge ?? lastGroup.minAge ?? age;
+  return fallbackAge + 5;
 };
 
 // ==================== COMPONENTS ====================

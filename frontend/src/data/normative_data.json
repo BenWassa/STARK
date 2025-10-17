@@ -1,0 +1,27 @@
+{
+  "domainWeights": {
+    "Strength": 0.20,
+    "Endurance": 0.25,
+    "Power": 0.15,
+    "Mobility": 0.10,
+    "BodyComp": 0.15,
+    "Recovery": 0.15
+  },
+  "vo2maxNorms": {
+    "male": [
+      { "age": "20-29", "mean": 44, "std_dev": 8.5 },
+      { "age": "30-39", "mean": 42, "std_dev": 8.0 },
+      { "age": "40-49", "mean": 40, "std_dev": 7.5 },
+      { "age": "50-59", "mean": 37, "std_dev": 7.0 },
+      { "age": "60-69", "mean": 34, "std_dev": 7.0 }
+    ],
+    "female": [
+      { "age": "20-29", "mean": 38, "std_dev": 7.5 },
+      { "age": "30-39", "mean": 36, "std_dev": 7.0 },
+      { "age": "40-49", "mean": 34, "std_dev": 6.5 },
+      { "age": "50-59", "mean": 31, "std_dev": 6.0 },
+      { "age": "60-69", "mean": 28, "std_dev": 6.0 }
+    ]
+  },
+  "dataSource": "Data is illustrative and based on general population statistics. For precise, clinical assessments, consult sources like the American College of Sports Medicine (ACSM)."
+}
