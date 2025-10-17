@@ -2,10 +2,21 @@ import React, { useState, useContext } from 'react';
 import { ChevronLeft, ChevronRight, Check, Activity, Heart, Zap, TrendingUp, Droplet, Battery } from 'lucide-react';
 import { DataContext } from '../App';
 import { saveAppState } from '../utils/storage';
+import { weightConversions, heightConversions, distanceConversions } from '../utils/units';
 
 const Onboarding = ({ onComplete }) => {
   const { userData, setUserData } = useContext(DataContext);
   const [currentStep, setCurrentStep] = useState(0);
+
+  // Helper functions for unit conversions and labels
+  const isImperial = userData.measurementSystem === 'imperial';
+  
+  const getWeightUnit = () => isImperial ? 'lbs' : 'kg';
+  const getHeightUnit = () => isImperial ? 'in' : 'cm';
+  const getDistanceUnit = () => isImperial ? 'miles' : 'km';
+  
+  const convertWeight = (kg) => isImperial ? Math.round(weightConversions.kgToLbs(kg)) : kg;
+  const convertHeight = (cm) => isImperial ? Math.round(heightConversions.cmToIn(cm)) : cm;
 
   const steps = [
     {
@@ -181,50 +192,50 @@ const Onboarding = ({ onComplete }) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Bench Press 1RM (kg)
+                  Bench Press 1RM ({getWeightUnit()})
                 </label>
                 <input
                   type="number"
                   value={userData.bench_press_1rm || ''}
                   onChange={(e) => updateField('bench_press_1rm', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  placeholder="e.g., 80"
+                  placeholder={`e.g., ${convertWeight(80)}`}
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Squat 1RM (kg)
+                  Squat 1RM ({getWeightUnit()})
                 </label>
                 <input
                   type="number"
                   value={userData.squat_1rm || ''}
                   onChange={(e) => updateField('squat_1rm', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  placeholder="e.g., 100"
+                  placeholder={`e.g., ${convertWeight(100)}`}
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Deadlift 1RM (kg)
+                  Deadlift 1RM ({getWeightUnit()})
                 </label>
                 <input
                   type="number"
                   value={userData.deadlift_1rm || ''}
                   onChange={(e) => updateField('deadlift_1rm', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  placeholder="e.g., 120"
+                  placeholder={`e.g., ${convertWeight(120)}`}
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Overhead Press 1RM (kg)
+                  Overhead Press 1RM ({getWeightUnit()})
                 </label>
                 <input
                   type="number"
                   value={userData.overhead_press_1rm || ''}
                   onChange={(e) => updateField('overhead_press_1rm', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  placeholder="e.g., 50"
+                  placeholder={`e.g., ${convertWeight(50)}`}
                 />
               </div>
             </div>
@@ -291,26 +302,26 @@ const Onboarding = ({ onComplete }) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Vertical Jump (cm)
+                  Vertical Jump ({getHeightUnit()})
                 </label>
                 <input
                   type="number"
                   value={userData.vertical_jump || ''}
                   onChange={(e) => updateField('vertical_jump', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  placeholder="e.g., 50"
+                  placeholder={`e.g., ${convertHeight(50)}`}
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Broad Jump (cm)
+                  Broad Jump ({getHeightUnit()})
                 </label>
                 <input
                   type="number"
                   value={userData.broad_jump || ''}
                   onChange={(e) => updateField('broad_jump', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  placeholder="e.g., 220"
+                  placeholder={`e.g., ${convertHeight(220)}`}
                 />
               </div>
             </div>
@@ -327,14 +338,14 @@ const Onboarding = ({ onComplete }) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Sit & Reach (cm)
+                  Sit & Reach ({getHeightUnit()})
                 </label>
                 <input
                   type="number"
                   value={userData.sit_reach || ''}
                   onChange={(e) => updateField('sit_reach', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  placeholder="e.g., 5"
+                  placeholder={`e.g., ${convertHeight(5)}`}
                 />
               </div>
               <div>
