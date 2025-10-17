@@ -1,6 +1,6 @@
 import React, { useState, useEffect, createContext, useContext, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Moon, Sun, Download, Zap, Battery, Droplet, Heart, TrendingUp, Trash2, Ruler, Play, Database, Upload, X, Info, Menu, Edit } from 'lucide-react';
+import { Download, Zap, Battery, Droplet, Heart, TrendingUp, Trash2, Ruler, Play, Database, Upload, X, Info, Menu, Edit } from 'lucide-react';
 import normativeDataRaw from './data/exercise_metrics.json' assert { type: 'json' };
 import { buildNormativeData } from './utils/norms';
 
@@ -18,55 +18,17 @@ const DataContext = createContext();
 export { DataContext, ThemeContext };
 
 const ThemeProvider = ({ children }) => {
-  const [darkMode, setDarkMode] = useState(() => {
-    if (typeof document !== 'undefined') {
-      document.documentElement.classList.add('dark');
-    }
-    return true;
-  });
+  const [darkMode] = useState(true); // Always dark mode
   const [themeLoading, setThemeLoading] = useState(true);
 
   useEffect(() => {
-    // Load theme preference from IndexedDB
-    const loadTheme = async () => {
-      try {
-        const saved = await loadAppState('starkDarkMode');
-        if (saved !== null) {
-          setDarkMode(saved === 'true');
-        }
-      } catch (error) {
-        console.error('Failed to load theme:', error);
-      } finally {
-        setThemeLoading(false);
-      }
-    };
-
-    loadTheme();
+    // Ensure dark mode is always applied
+    document.documentElement.classList.add('dark');
+    setThemeLoading(false);
   }, []);
 
-  useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-
-    if (!themeLoading) {
-      // Save theme preference to IndexedDB
-      const saveTheme = async () => {
-        try {
-          await saveAppState('starkDarkMode', String(darkMode));
-        } catch (error) {
-          console.error('Failed to save theme:', error);
-        }
-      };
-
-      saveTheme();
-    }
-  }, [darkMode, themeLoading]);
-
   return (
-    <ThemeContext.Provider value={{ darkMode, setDarkMode }}>
+    <ThemeContext.Provider value={{ darkMode }}>
       {children}
     </ThemeContext.Provider>
   );
@@ -814,17 +776,6 @@ const Shell = ({ children }) => {
                   <Database className="w-5 h-5 text-green-600 dark:text-green-400" />
                 </button>
               )}
-              <button
-                onClick={() => setDarkMode(!darkMode)}
-                className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                title="Toggle Theme"
-              >
-                {darkMode ? (
-                  <Sun className="w-5 h-5 text-gray-300" />
-                ) : (
-                  <Moon className="w-5 h-5 text-gray-600" />
-                )}
-              </button>
               <button
                 onClick={toggleMeasurementSystem}
                 className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
