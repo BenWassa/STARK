@@ -2,6 +2,181 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ==================== ONBOARDING BACKGROUNDS ==================== */
+
+/* Light Mode: Soft gradient with geometric particles */
+.onboarding-bg {
+  background: linear-gradient(135deg, #F8FAFC 0%, #E6EFFA 100%);
+}
+
+.dark .onboarding-bg {
+  background: linear-gradient(135deg, #0D1117 0%, #1C1F26 100%);
+}
+
+/* Particle Grid (Light Mode) */
+.particle-grid {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    radial-gradient(circle at 20% 30%, rgba(59, 130, 246, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(147, 197, 253, 0.04) 0%, transparent 50%),
+    repeating-linear-gradient(45deg, transparent, transparent 40px, rgba(255, 255, 255, 0.02) 40px, rgba(255, 255, 255, 0.02) 80px);
+  animation: float 20s ease-in-out infinite;
+}
+
+/* Abstract Human Silhouette (Light Mode) */
+.human-silhouette {
+  position: absolute;
+  right: -10%;
+  bottom: -5%;
+  width: 400px;
+  height: 600px;
+  background: radial-gradient(ellipse at center, rgba(59, 130, 246, 0.02) 0%, transparent 70%);
+  clip-path: ellipse(45% 50% at 50% 50%);
+  animation: breathe 8s ease-in-out infinite;
+}
+
+/* Energy Lines (Dark Mode) */
+.energy-lines {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(90deg, transparent 0%, rgba(34, 211, 238, 0.03) 50%, transparent 100%),
+    linear-gradient(0deg, transparent 0%, rgba(59, 130, 246, 0.02) 50%, transparent 100%);
+  background-size: 200px 200px, 150px 150px;
+  animation: pulse-lines 15s linear infinite;
+}
+
+/* Glowing Dots (Dark Mode) */
+.glowing-dots {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    radial-gradient(circle at 15% 25%, rgba(34, 211, 238, 0.1) 0%, transparent 2%),
+    radial-gradient(circle at 85% 75%, rgba(59, 130, 246, 0.08) 0%, transparent 2%),
+    radial-gradient(circle at 50% 50%, rgba(34, 211, 238, 0.06) 0%, transparent 2%),
+    radial-gradient(circle at 70% 30%, rgba(147, 197, 253, 0.05) 0%, transparent 2%);
+  animation: glow-pulse 4s ease-in-out infinite;
+}
+
+/* ==================== ONBOARDING ANIMATIONS ==================== */
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-slow {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes breathe {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.02;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.04;
+  }
+}
+
+@keyframes pulse-lines {
+  0% {
+    transform: translate(0, 0);
+    opacity: 0.03;
+  }
+  50% {
+    opacity: 0.06;
+  }
+  100% {
+    transform: translate(20px, 20px);
+    opacity: 0.03;
+  }
+}
+
+@keyframes glow-pulse {
+  0%, 100% {
+    opacity: 0.1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.2;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes waveform {
+  0%, 100% {
+    transform: scaleY(0.3);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+/* Waveform Bars */
+.waveform-bar {
+  position: absolute;
+  bottom: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(to top, rgba(59, 130, 246, 0.4), rgba(59, 130, 246, 0.1));
+  animation: waveform 1.5s ease-in-out infinite;
+}
+
+.waveform-bar:nth-child(1) { left: 20%; }
+.waveform-bar:nth-child(2) { left: 35%; }
+.waveform-bar:nth-child(3) { left: 50%; }
+.waveform-bar:nth-child(4) { left: 65%; }
+.waveform-bar:nth-child(5) { left: 80%; }
+
+/* Animation Classes */
+.animate-fade-in {
+  animation: fade-in 1s ease-out forwards;
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 1s ease-out 0.3s forwards;
+  opacity: 0;
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 3s ease-in-out infinite;
+}
+
+/* ==================== PWA OPTIMIZATIONS ==================== */
 /* PWA optimizations for Google Pixel 8 (412x915 viewport, 1080x2400 physical, DPR 2.625, 428 PPI) */
 
 /* Pixel 8 exact viewport match */

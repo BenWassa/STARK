@@ -98,19 +98,49 @@ const Onboarding = ({ onComplete }) => {
     switch (step.component) {
       case 'welcome':
         return (
-          <div className="text-center py-8">
-            <Activity className="w-16 h-16 text-blue-500 mx-auto mb-6" />
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-              Welcome to STARK
-            </h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
-              Transform your physiological data into clear fitness insights.
-              We'll guide you through setting up your personalized profile.
+          <div className="text-center py-12 relative">
+            {/* Animated Logo */}
+            <div className="relative mb-8 animate-fade-in">
+              <div className="absolute inset-0 blur-2xl opacity-20">
+                <Activity className="w-24 h-24 text-blue-500 mx-auto" />
+              </div>
+              <Activity className="w-24 h-24 text-blue-500 mx-auto relative animate-pulse-slow" />
+            </div>
+            
+            {/* Hero Text */}
+            <div className="space-y-4 mb-8 animate-fade-in-up">
+              <h2 className="text-4xl font-bold text-gray-900 dark:text-white tracking-tight">
+                Welcome to STARK
+              </h2>
+              <div className="space-y-2">
+                <p className="text-xl font-medium text-blue-600 dark:text-blue-400">
+                  Optimize Human Performance.
+                </p>
+                <p className="text-lg text-gray-600 dark:text-gray-400">
+                  Measure. Adapt. Evolve.
+                </p>
+              </div>
+            </div>
+
+            {/* Subtitle */}
+            <p className="text-gray-600 dark:text-gray-400 mb-8 max-w-lg mx-auto">
+              Data-Driven Strength Intelligence. We'll guide you through setting up your personalized performance profile.
             </p>
-            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
+
+            {/* Info Card */}
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg p-6 border border-blue-100 dark:border-blue-800/30">
               <p className="text-sm text-blue-800 dark:text-blue-200">
-                This will take about 5 minutes and you can update any metric later.
+                ⚡ Takes ~5 minutes • All metrics can be updated anytime
               </p>
+            </div>
+
+            {/* Waveform Animation */}
+            <div className="mt-8 h-12 relative overflow-hidden opacity-30">
+              <div className="waveform-bar"></div>
+              <div className="waveform-bar" style={{ animationDelay: '0.1s' }}></div>
+              <div className="waveform-bar" style={{ animationDelay: '0.2s' }}></div>
+              <div className="waveform-bar" style={{ animationDelay: '0.3s' }}></div>
+              <div className="waveform-bar" style={{ animationDelay: '0.4s' }}></div>
             </div>
           </div>
         );
@@ -456,19 +486,41 @@ const Onboarding = ({ onComplete }) => {
 
       case 'complete':
         return (
-          <div className="text-center py-8">
-            <Check className="w-16 h-16 text-green-500 mx-auto mb-6" />
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-              You're All Set!
-            </h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
-              Your fitness profile has been created. You can now explore your personalized
-              fitness insights and update any metrics as needed.
+          <div className="text-center py-12 relative">
+            {/* Success Animation */}
+            <div className="relative mb-8 animate-fade-in">
+              <div className="absolute inset-0 blur-2xl opacity-20">
+                <div className="w-24 h-24 bg-green-500 rounded-full mx-auto"></div>
+              </div>
+              <div className="bg-gradient-to-r from-green-400 to-emerald-500 rounded-full w-24 h-24 flex items-center justify-center mx-auto relative animate-pulse-slow shadow-lg shadow-green-500/50">
+                <Check className="w-12 h-12 text-white" />
+              </div>
+            </div>
+            
+            {/* Completion Message */}
+            <div className="space-y-4 mb-8 animate-fade-in-up">
+              <h2 className="text-4xl font-bold text-gray-900 dark:text-white tracking-tight">
+                Systems Optimized
+              </h2>
+              <div className="space-y-2">
+                <p className="text-xl font-medium text-green-600 dark:text-green-400">
+                  Performance Baseline Established.
+                </p>
+                <p className="text-lg text-gray-600 dark:text-gray-400">
+                  Ready to Evolve.
+                </p>
+              </div>
+            </div>
+
+            {/* Description */}
+            <p className="text-gray-600 dark:text-gray-400 mb-8 max-w-lg mx-auto">
+              STARK will now analyze your metrics and provide data-driven insights to optimize your human performance.
             </p>
-            <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4">
-              <p className="text-sm text-green-800 dark:text-green-200">
-                💡 Tip: Your data is automatically saved and backed up locally.
-                You can export your data anytime from the settings menu.
+
+            {/* Info Card */}
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg p-6 border border-blue-100 dark:border-blue-800/30">
+              <p className="text-sm text-blue-800 dark:text-blue-200">
+                💡 All metrics can be updated anytime • Data saved locally & exportable
               </p>
             </div>
           </div>
@@ -480,8 +532,23 @@ const Onboarding = ({ onComplete }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
-      <div className="max-w-2xl w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg">
+    <div className="min-h-screen onboarding-bg flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {/* Geometric Particles Grid */}
+        <div className="particle-grid"></div>
+        
+        {/* Abstract Human Silhouette (Light Mode) */}
+        <div className="human-silhouette dark:opacity-0"></div>
+        
+        {/* Energy Lines (Dark Mode) */}
+        <div className="energy-lines opacity-0 dark:opacity-100"></div>
+        
+        {/* Glowing Dots */}
+        <div className="glowing-dots opacity-0 dark:opacity-100"></div>
+      </div>
+
+      <div className="max-w-2xl w-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-lg shadow-2xl relative z-10">
         {/* Progress Bar */}
         <div className="px-6 pt-6">
           <div className="flex items-center justify-between mb-4">
