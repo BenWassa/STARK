@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react';
-import { ChevronLeft, ChevronRight, Check, Activity, Heart, Zap, TrendingUp, Droplet, Battery } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Check, Heart, Zap, TrendingUp, Droplet, Battery } from 'lucide-react';
 import { DataContext } from '../App';
 import { saveAppState } from '../utils/storage';
 import { weightConversions, heightConversions, distanceConversions } from '../utils/units';
@@ -226,7 +226,7 @@ const Onboarding = ({ onComplete }) => {
         return (
           <div className="space-y-4">
             <div className="flex items-center gap-2 mb-4">
-              <Activity className="w-5 h-5 text-blue-500" />
+              {/* Activity icon removed */}
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Strength Assessment</h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -16,17 +16,21 @@ if ('serviceWorker' in navigator) {
     const isLocal = hostname === 'localhost' || hostname === '127.0.0.1';
 
     if (isLocal) {
-      // Avoid service worker registration during local Live Server sessions
-      console.log('Service Worker registration skipped on local host.');
-      return;
     }
 
-    navigator.serviceWorker.register('./sw.js')
-      .then((registration) => {
-        console.log('Service Worker registered successfully:', registration.scope);
-      })
-      .catch((error) => {
-        console.log('Service Worker registration failed:', error);
-      });
+      // During local development and dev mode, avoid registering any Service Worker so builds load fresh
+      if (isLocal || isDevMode) {
+        console.log('Service Worker registration skipped during local/dev mode to avoid cache interference.');
+        return;
+      }
+
+      // In production, register the stable service worker
+      navigator.serviceWorker.register('./sw.js')
+        .then((registration) => {
+          console.log('Service Worker registered successfully:', registration.scope, 'using ./sw.js');
+        })
+        .catch((error) => {
+          console.log('Service Worker registration failed:', error);
+        });
   });
 }
