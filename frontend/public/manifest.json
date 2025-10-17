@@ -32,6 +32,12 @@
       "sizes": "512x512",
       "type": "image/svg+xml",
       "purpose": "maskable"
+    },
+    {
+      "src": "./icons/icon-192x192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "monochrome"
     }
   ],
   "categories": ["health", "fitness", "productivity"],
@@ -55,7 +61,8 @@
       "icons": [
         {
           "src": "./icons/icon-192x192.svg",
-          "sizes": "192x192"
+          "sizes": "192x192",
+          "type": "image/svg+xml"
         }
       ]
     }
