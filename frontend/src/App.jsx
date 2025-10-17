@@ -2,6 +2,7 @@ import React, { useState, useEffect, createContext, useContext, useRef } from 'r
 import { Moon, Sun, Download, Activity, Zap, Battery, Droplet, Heart, TrendingUp, Trash2, Ruler, Play, Database, Upload, X, Info, Menu } from 'lucide-react';
 import normativeDataRaw from './data/exercise_metrics.json' assert { type: 'json' };
 import { buildNormativeData } from './utils/norms';
+import { weightConversions, heightConversions } from './utils/units';
 
 // Build normalized normativeData for app usage
 const normativeData = buildNormativeData(normativeDataRaw);
@@ -9,6 +10,142 @@ import { calculateZScore, zScoreToPercentile, getPerformanceLabel, calculateFitn
 import { saveUserData, loadUserData, saveAppState, loadAppState, exportAllData, clearAllData, importData, getAllBackups } from './utils/storage';
 import packageJson from '../package.json' assert { type: 'json' };
 import Onboarding from './components/Onboarding';
+
+const exerciseMetricsConfig = normativeData.exerciseMetrics || {};
+
+const lowerIsBetterMetrics = new Set([
+  'resting_hr',
+  'body_fat_percentage',
+  'waist_circumference',
+  'soreness_level',
+  'stress_level'
+]);
+
+const getDomainLabel = (key) => {
+  if (key === 'bodyComp') {
+    return 'Body Composition';
+  }
+  return key.charAt(0).toUpperCase() + key.slice(1);
+};
+
+const convertFieldToDisplay = (field, value, measurementSystem) => {
+  const originalUnit = field.unit || '';
+  let unit = originalUnit;
+  let displayValue = value;
+  let min = field.min;
+  let max = field.max;
+
+  if (measurementSystem === 'imperial') {
+    if (originalUnit === 'kg') {
+      unit = 'lbs';
+      if (typeof displayValue === 'number') displayValue = weightConversions.kgToLbs(displayValue);
+      if (typeof min === 'number') min = weightConversions.kgToLbs(min);
+      if (typeof max === 'number') max = weightConversions.kgToLbs(max);
+    } else if (originalUnit === 'cm') {
+      unit = 'in';
+      if (typeof displayValue === 'number') displayValue = heightConversions.cmToIn(displayValue);
+      if (typeof min === 'number') min = heightConversions.cmToIn(min);
+      if (typeof max === 'number') max = heightConversions.cmToIn(max);
+    }
+  }
+
+  const formattedValue =
+    displayValue === undefined || displayValue === null
+      ? ''
+      : Number.isFinite(displayValue)
+      ? Number(displayValue.toFixed(1))
+      : displayValue;
+
+  const formatBound = (bound) =>
+    typeof bound === 'number' && Number.isFinite(bound) ? Number(bound.toFixed(1)) : undefined;
+
+  return {
+    value: formattedValue,
+    unit,
+    min: formatBound(min),
+    max: formatBound(max)
+  };
+};
+
+const convertFieldToBase = (field, value, measurementSystem) => {
+  let numericValue = parseFloat(value);
+  if (Number.isNaN(numericValue)) {
+    return null;
+  }
+
+  if (measurementSystem === 'imperial') {
+    if (field.unit === 'kg') {
+      numericValue = weightConversions.lbsToKg(numericValue);
+    } else if (field.unit === 'cm') {
+      numericValue = heightConversions.inToCm(numericValue);
+    }
+  }
+
+  return numericValue;
+};
+
+const computeDomainScoreFromMetrics = (domainKey, metricsValues) => {
+  const fields = exerciseMetricsConfig[domainKey] || [];
+
+  if (!fields.length) {
+    return 50;
+  }
+
+  let total = 0;
+  let count = 0;
+
+  fields.forEach((field) => {
+    const rawValue = metricsValues[field.id];
+    if (typeof rawValue !== 'number' || Number.isNaN(rawValue)) {
+      return;
+    }
+
+    const min = typeof field.min === 'number' ? field.min : 0;
+    const max = typeof field.max === 'number' ? field.max : 100;
+    if (max === min) {
+      total += 0.5;
+      count += 1;
+      return;
+    }
+
+    let normalized;
+    if (lowerIsBetterMetrics.has(field.id)) {
+      normalized = (max - rawValue) / (max - min);
+    } else {
+      normalized = (rawValue - min) / (max - min);
+    }
+
+    normalized = Math.min(Math.max(normalized, 0), 1);
+    total += normalized;
+    count += 1;
+  });
+
+  if (count === 0) {
+    return 50;
+  }
+
+  return Math.round((total / count) * 100);
+};
+
+const buildInitialMetricState = (fields, userData, measurementSystem) => {
+  const initialState = {};
+
+  fields.forEach((field) => {
+    const storedValue =
+      typeof userData[field.id] === 'number'
+        ? userData[field.id]
+        : typeof field.defaultValue === 'number'
+        ? field.defaultValue
+        : '';
+    const displayMeta = convertFieldToDisplay(field, storedValue, measurementSystem);
+    initialState[field.id] =
+      displayMeta.value === '' || displayMeta.value === undefined
+        ? ''
+        : String(displayMeta.value);
+  });
+
+  return initialState;
+};
 
 // ==================== CONTEXTS ====================
 const ThemeContext = createContext();
@@ -238,7 +375,7 @@ const SpiderChart = ({ data, darkMode }) => {
   );
 };
 
-const DomainCard = ({ domain, score, percentile, zScore, icon: Icon }) => {
+const DomainCard = ({ domain, score, percentile, zScore, icon: Icon, onLogMetrics }) => {
   const perfLabel = getPerformanceLabel(percentile);
   
   return (
@@ -274,6 +411,146 @@ const DomainCard = ({ domain, score, percentile, zScore, icon: Icon }) => {
       <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
         z = {zScore.toFixed(2)}
       </p>
+      
+      {onLogMetrics && (
+        <button
+          type="button"
+          onClick={onLogMetrics}
+          className="mt-4 w-full inline-flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 rounded-md hover:bg-blue-50 dark:hover:bg-blue-900/40 transition-colors"
+        >
+          Log metrics
+        </button>
+      )}
+    </div>
+  );
+};
+
+const DomainMetricsModal = ({ domainKey, measurementSystem, userData, onClose, onSave }) => {
+  const fields = exerciseMetricsConfig[domainKey] || [];
+  const domainLabel = getDomainLabel(domainKey);
+  const [formState, setFormState] = useState(() =>
+    buildInitialMetricState(fields, userData, measurementSystem)
+  );
+
+  useEffect(() => {
+    setFormState(buildInitialMetricState(fields, userData, measurementSystem));
+  }, [domainKey, userData, measurementSystem]);
+
+  if (!domainKey || !fields.length) {
+    return null;
+  }
+
+  const handleChange = (id, value) => {
+    setFormState((prev) => ({ ...prev, [id]: value }));
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+
+    const metricValues = {};
+
+    fields.forEach((field) => {
+      const baseValue = convertFieldToBase(field, formState[field.id], measurementSystem);
+      if (baseValue !== null) {
+        metricValues[field.id] = baseValue;
+      }
+    });
+
+    onSave(domainKey, metricValues);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div
+        className="absolute inset-0 bg-gray-900/70 backdrop-blur-sm"
+        onClick={onClose}
+        aria-hidden="true"
+      />
+
+      <form
+        onSubmit={handleSubmit}
+        className="relative z-10 w-full max-w-lg bg-white dark:bg-gray-900 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700"
+      >
+        <div className="flex items-start justify-between px-5 py-4 border-b border-gray-200 dark:border-gray-800">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+              Log {domainLabel} Metrics
+            </h2>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Update raw performance data to refresh this domain’s score.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            aria-label="Close metrics modal"
+          >
+            <X className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+          </button>
+        </div>
+
+        <div className="px-5 py-4 space-y-4 max-h-[70vh] overflow-y-auto">
+          {fields.map((field) => {
+            const meta = convertFieldToDisplay(
+              field,
+              typeof userData[field.id] === 'number' ? userData[field.id] : field.defaultValue,
+              measurementSystem
+            );
+
+            return (
+              <div key={field.id} className="space-y-2">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-900 dark:text-gray-100">
+                      {field.name}
+                    </label>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      {field.description}
+                    </p>
+                  </div>
+                  <span className="text-xs font-semibold text-blue-600 dark:text-blue-400">
+                    {meta.unit}
+                  </span>
+                </div>
+\n            <input
+                  type="number"
+                  step="any"
+                  min={meta.min}
+                  max={meta.max}
+                  value={formState[field.id] ?? ''}
+                  onChange={(event) => handleChange(field.id, event.target.value)}
+                  className="w-full px-3 py-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+
+                {(meta.min !== undefined || meta.max !== undefined) && (
+                  <p className="text-[10px] text-gray-500 dark:text-gray-400">
+                    Range:{' '}
+                    {meta.min !== undefined ? `min ${meta.min}` : '—'} /{' '}
+                    {meta.max !== undefined ? `max ${meta.max}` : '—'} {meta.unit}
+                  </p>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="px-5 py-4 border-t border-gray-200 dark:border-gray-800 flex items-center justify-between">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
+          >
+            Save metrics
+          </button>
+        </div>
+      </form>
     </div>
   );
 };
@@ -283,17 +560,41 @@ const FitnessModule = () => {
   const { darkMode } = useContext(ThemeContext);
   const { userData, setUserData } = useContext(DataContext);
   const [results, setResults] = useState(null);
+  const [activeDomain, setActiveDomain] = useState(null);
 
   useEffect(() => {
     const results = calculateUserResults(userData);
     setResults(results);
   }, [userData]);
 
-  const updateField = (field, value) => {
-    setUserData(prev => ({ ...prev, [field]: parseFloat(value) || 0 }));
+  const domainConfig = getDomainConfig();
+  const measurementSystem = userData.measurementSystem || 'metric';
+
+  const handleOpenDomainModal = (domainKey) => {
+    setActiveDomain(domainKey);
   };
 
-  const domainConfig = getDomainConfig();
+  const handleCloseDomainModal = () => {
+    setActiveDomain(null);
+  };
+
+  const handleSaveDomainMetrics = (domainKey, metricValues) => {
+    setUserData((prev) => {
+      const updated = { ...prev };
+
+      Object.entries(metricValues).forEach(([metricId, metricValue]) => {
+        updated[metricId] = metricValue;
+      });
+
+      if (Object.keys(metricValues).length > 0) {
+        updated[domainKey] = computeDomainScoreFromMetrics(domainKey, metricValues);
+      }
+
+      return updated;
+    });
+
+    setActiveDomain(null);
+  };
 
   return (
     <>
@@ -345,8 +646,7 @@ const FitnessModule = () => {
           <div>
             <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-2">
               Age
-            </label>
-            <input
+            </label>\n            <input
               type="number"
               value={userData.age}
               onChange={(e) => updateField('age', e.target.value)}
@@ -369,8 +669,7 @@ const FitnessModule = () => {
           <div>
             <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-2">
               VO₂max
-            </label>
-            <input
+            </label>\n            <input
               type="number"
               value={userData.vo2max}
               onChange={(e) => updateField('vo2max', e.target.value)}
@@ -402,18 +701,44 @@ const FitnessModule = () => {
 
       {/* Domain Cards */}
       {results && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {domainConfig.map(({ key, icon }) => (
-            <DomainCard
-              key={key}
-              domain={key}
-              score={userData[key]}
-              percentile={results.domains[key]}
-              zScore={results.zScores[key]}
-              icon={icon}
-            />
-          ))}
-        </div>
+        <section className="mt-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+              Domain Metrics
+            </h2>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Log new data points to recalculate each domain’s score.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {domainConfig.map(({ key, icon }) => (
+              <DomainCard
+                key={key}
+                domain={key}
+                score={userData[key]}
+                percentile={results.domains[key]}
+                zScore={results.zScores[key]}
+                icon={icon}
+                onLogMetrics={
+                  (exerciseMetricsConfig[key] || []).length
+                    ? () => handleOpenDomainModal(key)
+                    : undefined
+                }
+              />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {activeDomain && (
+        <DomainMetricsModal
+          domainKey={activeDomain}
+          measurementSystem={measurementSystem}
+          userData={userData}
+          onClose={handleCloseDomainModal}
+          onSave={handleSaveDomainMetrics}
+        />
       )}
     </>
   );
@@ -556,25 +881,22 @@ const Shell = ({ children }) => {
                 type="button"
                 onClick={() => setIsSideNavOpen(true)}
                 className="p-2 rounded-full border border-blue-100 dark:border-blue-900/40 bg-white/80 dark:bg-gray-900/60 shadow-sm hover:shadow-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
-                aria-label="Open STARK navigation"
-              >
-                <Menu className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-              </button>
-              <div className="flex items-center gap-3">
-                <Activity className="w-7 h-7 text-blue-600 dark:text-blue-400" />
-                <div className="flex flex-col">
-                  <h1 className="text-xl font-bold text-gray-900 dark:text-white">STARK</h1>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-gray-500 dark:text-gray-400">Fitness Module</span>
-                    {isDevMode && (
-                      <span className="text-xs bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 px-2 py-0.5 rounded font-mono">
-                        DEV
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
+            aria-label="Open STARK navigation"
+          >
+            <Menu className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+          </button>
+          <div className="flex flex-col">
+            <h1 className="text-xl font-bold text-gray-900 dark:text-white">STARK</h1>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-500 dark:text-gray-400">Fitness Module</span>
+              {isDevMode && (
+                <span className="text-xs bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 px-2 py-0.5 rounded font-mono">
+                  DEV
+                </span>
+              )}
             </div>
+          </div>
+        </div>
             <div className="flex items-center gap-3">
               <button
                 onClick={exportData}
@@ -899,4 +1221,5 @@ const App = () => {
 };
 
 export default App;
+
 
