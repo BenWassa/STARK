@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#3b82f6" />
+    <title>STARK - Dev Mode</title>
+    <script>
+      // Auto-enable dev mode for testing
+      (function() {
+        const url = new URL(window.location);
+        if (url.searchParams.get('dev') !== 'true') {
+          url.searchParams.set('dev', 'true');
+          window.location.replace(url.toString());
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

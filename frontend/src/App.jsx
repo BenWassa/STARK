@@ -521,6 +521,13 @@ const App = () => {
     const devParam = urlParams.get('dev');
     const devStorage = localStorage.getItem('starkDevMode');
     
+    console.log('🔍 Dev mode check:', { 
+      search: window.location.search, 
+      devParam, 
+      devStorage,
+      currentUrl: window.location.href 
+    });
+    
     if (devParam === 'true' || devStorage === 'true') {
       setIsDevMode(true);
       localStorage.setItem('starkDevMode', 'true');
@@ -528,6 +535,8 @@ const App = () => {
       console.log('   Features: Skip onboarding, dev tools in header');
       console.log('   Tools: Clear Data (🗑️), Run Onboarding (▶️), Load Mock Data (🗄️)');
       console.log('   To disable: localStorage.removeItem("starkDevMode") or remove ?dev=true');
+    } else {
+      console.log('❌ Dev mode not activated');
     }
   }, []);
 
