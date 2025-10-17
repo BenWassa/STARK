@@ -13,7 +13,16 @@
         const url = new URL(window.location);
         if (url.searchParams.get('dev') !== 'true') {
           url.searchParams.set('dev', 'true');
+          // Use replace to avoid redirect loops
           window.location.replace(url.toString());
+        } else {
+          // Ensure localStorage has dev mode set (for persistence)
+          try {
+            localStorage.setItem('starkDevMode', 'true');
+          } catch (e) {
+            // Ignore localStorage errors in incognito/private mode
+            console.log('Dev mode set via URL parameter (localStorage unavailable)');
+          }
         }
       })();
     </script>

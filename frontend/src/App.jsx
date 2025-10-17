@@ -521,6 +521,11 @@ const App = () => {
   const [isDevMode, setIsDevMode] = useState(false);
 
   useEffect(() => {
+    // Log version info on app load
+    console.log(`%c⚡ STARK Fitness v${packageJson.version}`, 'font-weight: bold; font-size: 14px; color: #3b82f6');
+    console.log(`📊 Dataset: ${normativeData.source} v${normativeData.version}`);
+    console.log(`📅 Build: ${normativeData.lastUpdated}`);
+    
     // Check for dev mode (URL parameter or localStorage)
     const urlParams = new URLSearchParams(window.location.search);
     const devParam = urlParams.get('dev');
