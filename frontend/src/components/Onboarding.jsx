@@ -69,6 +69,7 @@ const Onboarding = ({ onComplete }) => {
   ];
 
   const currentStepMeta = steps[currentStep];
+  const isBasicStep = currentStepMeta.component === 'basic';
   const showStepTitle = currentStep !== 0 && Boolean(currentStepMeta.title);
   const showStepDescription = Boolean(currentStepMeta.description);
 
@@ -156,89 +157,67 @@ const Onboarding = ({ onComplete }) => {
 
       case 'basic':
         return (
-          <div className="grid gap-8 md:grid-cols-5 items-start">
-            <div className="space-y-6 md:col-span-3">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Age
-                  </label>
-                  <input
-                    type="number"
-                    value={userData.age}
-                    onChange={(e) => updateField('age', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    min="18"
-                    max="100"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Gender
-                  </label>
-                  <select
-                    value={userData.gender}
-                    onChange={(e) => setUserData(prev => ({ ...prev, gender: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  >
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    VO2 Max (mL/kg/min)
-                  </label>
-                  <input
-                    type="number"
-                    value={userData.vo2max}
-                    onChange={(e) => updateField('vo2max', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    min="20"
-                    max="80"
-                    step="0.1"
-                  />
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    Estimate: 15-20 for poor, 35-40 for good, 45+ for excellent
-                  </p>
-                </div>
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Age
+                </label>
+                <input
+                  type="number"
+                  value={userData.age}
+                  onChange={(e) => updateField('age', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  min="18"
+                  max="100"
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Measurement System
+                  Gender
                 </label>
                 <select
-                  value={userData.measurementSystem || 'metric'}
-                  onChange={(e) => setUserData(prev => ({ ...prev, measurementSystem: e.target.value }))}
+                  value={userData.gender}
+                  onChange={(e) => setUserData(prev => ({ ...prev, gender: e.target.value }))}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 >
-                  <option value="metric">Metric (kg, cm, km)</option>
-                  <option value="imperial">Imperial (lbs, ft, miles)</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
                 </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  VO2 Max (mL/kg/min)
+                </label>
+                <input
+                  type="number"
+                  value={userData.vo2max}
+                  onChange={(e) => updateField('vo2max', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  min="20"
+                  max="80"
+                  step="0.1"
+                />
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  Choose your preferred unit system. You can change this later in settings.
+                  Estimate: 15-20 for poor, 35-40 for good, 45+ for excellent
                 </p>
               </div>
             </div>
-            <div className="hidden md:flex items-center justify-center md:col-span-2">
-              <div className="relative w-full max-w-sm">
-                <img
-                  src={starkPersonHealth}
-                  alt="Performance visualization"
-                  className="w-full h-auto drop-shadow-2xl select-none pointer-events-none"
-                  decoding="async"
-                  draggable="false"
-                />
-              </div>
-            </div>
-            <div className="md:hidden flex justify-center">
-              <img
-                src={starkPersonHealth}
-                alt="Performance visualization"
-                className="w-32 h-32 mt-4 drop-shadow-2xl select-none pointer-events-none"
-                decoding="async"
-                draggable="false"
-              />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Measurement System
+              </label>
+              <select
+                value={userData.measurementSystem || 'metric'}
+                onChange={(e) => setUserData(prev => ({ ...prev, measurementSystem: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              >
+                <option value="metric">Metric (kg, cm, km)</option>
+                <option value="imperial">Imperial (lbs, ft, miles)</option>
+              </select>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Choose your preferred unit system. You can change this later in settings.
+              </p>
             </div>
           </div>
         );
@@ -603,17 +582,41 @@ const Onboarding = ({ onComplete }) => {
 
         {/* Content */}
         <div className="px-6 py-8">
-          {(showStepTitle || showStepDescription) && (
-            <div className="mb-6">
-              {showStepTitle && (
-                <h1 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                  {currentStepMeta.title}
-                </h1>
-              )}
-              {showStepDescription && (
-                <p className="text-gray-600 dark:text-gray-400">
-                  {currentStepMeta.description}
-                </p>
+          {(showStepTitle || showStepDescription || isBasicStep) && (
+            <div className={`mb-6 ${isBasicStep ? 'md:flex md:items-start md:justify-between md:gap-6' : ''}`}>
+              <div>
+                {showStepTitle && (
+                  <h1 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                    {currentStepMeta.title}
+                  </h1>
+                )}
+                {showStepDescription && (
+                  <p className="text-gray-600 dark:text-gray-400">
+                    {currentStepMeta.description}
+                  </p>
+                )}
+                {isBasicStep && (
+                  <div className="flex justify-center md:hidden mt-4">
+                    <img
+                      src={starkPersonHealth}
+                      alt="Performance visualization"
+                      className="w-32 h-32 drop-shadow-2xl select-none pointer-events-none"
+                      decoding="async"
+                      draggable="false"
+                    />
+                  </div>
+                )}
+              </div>
+              {isBasicStep && (
+                <div className="hidden md:block">
+                  <img
+                    src={starkPersonHealth}
+                    alt="Performance visualization"
+                    className="w-32 h-32 drop-shadow-2xl select-none pointer-events-none"
+                    decoding="async"
+                    draggable="false"
+                  />
+                </div>
               )}
             </div>
           )}
