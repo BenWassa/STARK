@@ -10,6 +10,8 @@ import { calculateZScore, zScoreToPercentile, getPerformanceLabel, calculateFitn
 import { saveUserData, loadUserData, saveAppState, loadAppState, exportAllData, clearAllData, importData, getAllBackups } from './utils/storage';
 import packageJson from '../package.json' assert { type: 'json' };
 import Onboarding from './components/Onboarding';
+import UpdateBanner from './components/UpdateBanner';
+import { checkForUpdates, dismissUpdate, performUpdate } from './utils/versionCheck';
 
 const exerciseMetricsConfig = normativeData.exerciseMetrics || {};
 
@@ -650,7 +652,8 @@ const FitnessModule = () => {
           <div>
             <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-2">
               Age
-            </label>\n            <input
+            </label>
+\n            <input
               type="number"
               value={userData.age}
               onChange={(e) => updateField('age', e.target.value)}
@@ -673,7 +676,8 @@ const FitnessModule = () => {
           <div>
             <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-2">
               VO₂max
-            </label>\n            <input
+            </label>
+\n            <input
               type="number"
               value={userData.vo2max}
               onChange={(e) => updateField('vo2max', e.target.value)}
@@ -1059,6 +1063,7 @@ const App = () => {
   const [appLoading, setAppLoading] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [isDevMode, setIsDevMode] = useState(false);
+  const [updateAvailable, setUpdateAvailable] = useState(null);
 
   useEffect(() => {
     // Log version info on app load
@@ -1088,6 +1093,21 @@ const App = () => {
     } else {
       console.log('❌ Dev mode not activated');
     }
+
+    // Check for app updates
+    const checkForAppUpdates = async () => {
+      try {
+        const updateInfo = await checkForUpdates(packageJson.version);
+        if (updateInfo) {
+          console.log('📦 Update available:', updateInfo);
+          setUpdateAvailable(updateInfo);
+        }
+      } catch (error) {
+        console.warn('Failed to check for updates:', error);
+      }
+    };
+
+    checkForAppUpdates();
   }, []);
 
   const loadMockData = () => {
@@ -1159,6 +1179,17 @@ const App = () => {
     setOnboardingComplete(true);
   };
 
+  const handleUpdateClick = () => {
+    performUpdate();
+  };
+
+  const handleDismissUpdate = () => {
+    if (updateAvailable) {
+      dismissUpdate(updateAvailable.latestVersion);
+      setUpdateAvailable(null);
+    }
+  };
+
   if (appLoading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
@@ -1196,9 +1227,13 @@ const App = () => {
   return (
     <ThemeProvider>
       <DataProvider isDevMode={isDevMode} runOnboarding={runOnboarding} clearAllAppData={clearAllAppData} loadMockData={loadMockData} toggleMeasurementSystem={toggleMeasurementSystem}>
-        <Shell>
-          <FitnessModule />
-        </Shell>
+        {updateAvailable && (
+          <UpdateBanner
+            onUpdate={handleUpdateClick}
+            onDismiss={handleDismissUpdate}
+          />
+        )}
+        <FitnessModule />
       </DataProvider>
     </ThemeProvider>
   );
