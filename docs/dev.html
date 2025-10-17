@@ -7,16 +7,20 @@
     <link rel="manifest" href="./manifest.json" />
     <meta name="theme-color" content="#3b82f6" />
     <title>STARK - Dev Mode</title>
-    <script type="module" crossorigin src="./assets/index-CfKnrKHS.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-DixxpvtK.css">
     <script>
       // Auto-enable dev mode for testing
-      if (!window.location.search.includes('dev=true')) {
-        window.location.search = '?dev=true';
-      }
+      (function() {
+        const url = new URL(window.location);
+        if (url.searchParams.get('dev') !== 'true') {
+          url.searchParams.set('dev', 'true');
+          window.location.replace(url.toString());
+        }
+      })();
     </script>
+    <script type="module" crossorigin src="./assets/main-CjfYIL2q.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/main-v0hkUTbS.css">
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"></div>
   </body>
 </html>

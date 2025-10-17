@@ -66,6 +66,7 @@ cd frontend
 npm install
 npm run dev          # Start development server
 npm run build        # Build for production
+npm run check-versions  # Verify all version files are consistent
 ```
 
 #### Option 2: Windows PowerShell (Security Policy Workaround)
