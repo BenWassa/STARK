@@ -1,12 +1,12 @@
-import React, { useState, useEffect, createContext, useContext } from 'react';
-import { Moon, Sun, Download, Activity, Zap, Battery, Droplet, Heart, TrendingUp, Trash2, Ruler, Play, Database } from 'lucide-react';
+import React, { useState, useEffect, createContext, useContext, useRef } from 'react';
+import { Moon, Sun, Download, Activity, Zap, Battery, Droplet, Heart, TrendingUp, Trash2, Ruler, Play, Database, Upload, X, Info } from 'lucide-react';
 import normativeDataRaw from './data/exercise_metrics.json' assert { type: 'json' };
 import { buildNormativeData } from './utils/norms';
 
 // Build normalized normativeData for app usage
 const normativeData = buildNormativeData(normativeDataRaw);
 import { calculateZScore, zScoreToPercentile, getPerformanceLabel, calculateFitnessIndex, calculateFitnessAge, calculateUserResults, getDomainConfig, exportUserData } from './utils/calculations';
-import { saveUserData, loadUserData, saveAppState, loadAppState, exportAllData, clearAllData } from './utils/storage';
+import { saveUserData, loadUserData, saveAppState, loadAppState, exportAllData, clearAllData, importData, getAllBackups } from './utils/storage';
 import packageJson from '../package.json' assert { type: 'json' };
 import Onboarding from './components/Onboarding';
 
@@ -407,6 +407,10 @@ const FitnessModule = () => {
 const Shell = ({ children }) => {
   const { darkMode, setDarkMode } = useContext(ThemeContext);
   const { userData, isDevMode, runOnboarding, clearAllAppData, loadMockData, toggleMeasurementSystem } = useContext(DataContext);
+  const [isSideNavOpen, setIsSideNavOpen] = useState(false);
+  const [latestBackup, setLatestBackup] = useState(null);
+  const [importingData, setImportingData] = useState(false);
+  const importInputRef = useRef(null);
 
   const exportData = async () => {
     try {
@@ -425,13 +429,109 @@ const Shell = ({ children }) => {
     }
   };
 
+  useEffect(() => {
+    if (!isSideNavOpen) {
+      return;
+    }
+
+    let isMounted = true;
+
+    const fetchBackups = async () => {
+      try {
+        const backups = await getAllBackups();
+        if (!isMounted) {
+          return;
+        }
+
+        if (backups && backups.length) {
+          const latest = backups.reduce((acc, item) => {
+            if (!item?.timestamp) {
+              return acc;
+            }
+            if (!acc) {
+              return item;
+            }
+            return new Date(item.timestamp) > new Date(acc.timestamp ?? 0) ? item : acc;
+          }, null);
+
+          setLatestBackup(latest);
+        } else {
+          setLatestBackup(null);
+        }
+      } catch (error) {
+        console.error('Failed to load backup metadata:', error);
+        if (isMounted) {
+          setLatestBackup(null);
+        }
+      }
+    };
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setIsSideNavOpen(false);
+      }
+    };
+
+    fetchBackups();
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      isMounted = false;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isSideNavOpen]);
+
+  const handleImportButtonClick = () => {
+    importInputRef.current?.click();
+  };
+
+  const handleImportFileChange = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    setImportingData(true);
+
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+      const success = await importData(parsed);
+
+      if (success) {
+        alert('Data imported successfully. The app will reload to apply changes.');
+        window.location.reload();
+      } else {
+        alert('Import failed. Please verify the file contents and try again.');
+      }
+    } catch (error) {
+      console.error('Failed to import data:', error);
+      alert('Unable to import data. Ensure you selected a valid STARK export file.');
+    } finally {
+      setImportingData(false);
+      event.target.value = '';
+    }
+  };
+
+  const versionLabel = packageJson.version ?? '1.0.0';
+  const latestBackupTimestamp = latestBackup?.timestamp
+    ? new Date(latestBackup.timestamp).toLocaleString()
+    : 'No backups captured yet';
+
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-200">
       <header className="border-b border-gray-200 dark:border-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Activity className="w-7 h-7 text-blue-600 dark:text-blue-400" />
+              <button
+                type="button"
+                onClick={() => setIsSideNavOpen(true)}
+                className="p-2 rounded-full border border-blue-100 dark:border-blue-900/40 bg-white/80 dark:bg-gray-900/60 shadow-sm hover:shadow-md transition"
+                aria-label="Open STARK navigation"
+              >
+                <Activity className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+              </button>
               <div className="flex flex-col">
                 <h1 className="text-xl font-bold text-gray-900 dark:text-white">STARK</h1>
                 <div className="flex items-center gap-2">
@@ -509,6 +609,110 @@ const Shell = ({ children }) => {
       <footer className="text-xs text-gray-500 dark:text-gray-400 text-center py-4 border-t border-gray-200 dark:border-gray-800">
         STARK Analytics Engine v{packageJson.version} © 2025 • All calculations performed locally using normative dataset v{normativeData.version}
       </footer>
+
+      <input
+        ref={importInputRef}
+        type="file"
+        accept="application/json"
+        className="hidden"
+        onChange={handleImportFileChange}
+      />
+
+      {isSideNavOpen && (
+        <div className="fixed inset-0 z-40 flex">
+          <button
+            type="button"
+            onClick={() => setIsSideNavOpen(false)}
+            className="flex-1 bg-gray-900/40 backdrop-blur-sm transition-opacity"
+            aria-label="Close navigation"
+          />
+          <aside className="relative w-80 sm:w-96 bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 shadow-2xl">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-gray-800">
+              <div className="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-gray-100">
+                <Activity className="w-4 h-4 text-blue-500" />
+                <span>STARK Console</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsSideNavOpen(false)}
+                className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                aria-label="Close navigation"
+              >
+                <X className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+              </button>
+            </div>
+
+            <div className="px-5 py-6 space-y-8 overflow-y-auto h-full">
+              <section>
+                <div className="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-gray-100">
+                  <Database className="w-4 h-4 text-blue-500" />
+                  <span>Data Management</span>
+                </div>
+                <p className="mt-2 text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
+                  Export a full snapshot of your metrics, then import to restore on another device. Backups rotate automatically whenever your profile updates.
+                </p>
+                <div className="mt-4 space-y-3">
+                  <button
+                    type="button"
+                    onClick={exportData}
+                    className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-md bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium transition-colors"
+                  >
+                    <Download className="w-4 h-4" />
+                    Export data
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleImportButtonClick}
+                    disabled={importingData}
+                    className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-md border border-gray-300 dark:border-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    <Upload className="w-4 h-4" />
+                    {importingData ? 'Importing…' : 'Import data'}
+                  </button>
+                </div>
+                <div className="mt-4 rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/40 p-3">
+                  <p className="text-xs font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wide">
+                    Latest backup
+                  </p>
+                  <p className="mt-1 text-sm text-gray-700 dark:text-gray-300">
+                    {latestBackupTimestamp}
+                  </p>
+                  {latestBackup?.id && (
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      Slot: {latestBackup.id}
+                    </p>
+                  )}
+                </div>
+              </section>
+
+              <section>
+                <div className="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-gray-100">
+                  <Info className="w-4 h-4 text-blue-500" />
+                  <span>About</span>
+                </div>
+                <dl className="mt-4 space-y-2 text-sm">
+                  <div className="flex items-center justify-between text-gray-700 dark:text-gray-300">
+                    <dt>App version</dt>
+                    <dd className="font-semibold text-gray-900 dark:text-gray-100">{versionLabel}</dd>
+                  </div>
+                  <div className="flex items-center justify-between text-gray-700 dark:text-gray-300">
+                    <dt>Measurement</dt>
+                    <dd className="font-semibold text-gray-900 dark:text-gray-100">
+                      {userData.measurementSystem === 'imperial' ? 'Imperial (lbs, miles)' : 'Metric (kg, km)'}
+                    </dd>
+                  </div>
+                  <div className="flex items-center justify-between text-gray-700 dark:text-gray-300">
+                    <dt>Last backup</dt>
+                    <dd className="font-semibold text-gray-900 dark:text-gray-100">
+                      {latestBackup?.timestamp ? new Date(latestBackup.timestamp).toLocaleDateString() : 'N/A'}
+                    </dd>
+                  </div>
+                </dl>
+              </section>
+            </div>
+          </aside>
+        </div>
+      )}
     </div>
   );
 };

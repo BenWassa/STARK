@@ -473,31 +473,6 @@
   }
 }
 
-@keyframes waveform {
-  0%, 100% {
-    transform: scaleY(0.3);
-  }
-  50% {
-    transform: scaleY(1);
-  }
-}
-
-/* Waveform Bars */
-.waveform-bar {
-  position: absolute;
-  bottom: 0;
-  width: 4px;
-  height: 100%;
-  background: linear-gradient(to top, rgba(59, 130, 246, 0.4), rgba(59, 130, 246, 0.1));
-  animation: waveform 1.5s ease-in-out infinite;
-}
-
-.waveform-bar:nth-child(1) { left: 20%; }
-.waveform-bar:nth-child(2) { left: 35%; }
-.waveform-bar:nth-child(3) { left: 50%; }
-.waveform-bar:nth-child(4) { left: 65%; }
-.waveform-bar:nth-child(5) { left: 80%; }
-
 /* Animation Classes */
 .animate-fade-in {
   animation: fade-in 1s ease-out forwards;

@@ -3,6 +3,8 @@ import { ChevronLeft, ChevronRight, Check, Activity, Heart, Zap, TrendingUp, Dro
 import { DataContext } from '../App';
 import { saveAppState } from '../utils/storage';
 import { weightConversions, heightConversions, distanceConversions } from '../utils/units';
+import starkLogo from '../assets/stark_logo_rounded.png';
+import starkPersonHealth from '../assets/stark_personhealth.png';
 
 const Onboarding = ({ onComplete }) => {
   const { userData, setUserData } = useContext(DataContext);
@@ -101,17 +103,25 @@ const Onboarding = ({ onComplete }) => {
           <div className="text-center py-12 relative">
             {/* Animated Logo */}
             <div className="relative mb-8 animate-fade-in">
-              <div className="absolute inset-0 blur-2xl opacity-20">
-                <Activity className="w-24 h-24 text-blue-500 mx-auto" />
+              <div className="absolute inset-0 blur-3xl opacity-25">
+                <img
+                  src={starkLogo}
+                  alt=""
+                  aria-hidden="true"
+                  className="w-32 h-32 mx-auto select-none pointer-events-none"
+                />
               </div>
-              <Activity className="w-24 h-24 text-blue-500 mx-auto relative animate-pulse-slow" />
+              <img
+                src={starkLogo}
+                alt="STARK emblem"
+                className="w-32 h-32 mx-auto relative animate-pulse-slow drop-shadow-xl"
+                decoding="async"
+                draggable="false"
+              />
             </div>
             
             {/* Hero Text */}
-            <div className="space-y-4 mb-8 animate-fade-in-up">
-              <h2 className="text-4xl font-bold text-gray-900 dark:text-white tracking-tight">
-                Welcome to STARK
-              </h2>
+            <div className="space-y-6 mb-8 animate-fade-in-up">
               <div className="space-y-2">
                 <p className="text-xl font-medium text-blue-600 dark:text-blue-400">
                   Optimize Human Performance.
@@ -120,6 +130,13 @@ const Onboarding = ({ onComplete }) => {
                   Measure. Adapt. Evolve.
                 </p>
               </div>
+              <img
+                src={starkPersonHealth}
+                alt="Human performance visualization"
+                className="w-36 h-36 sm:w-40 sm:h-40 mx-auto drop-shadow-lg select-none pointer-events-none"
+                decoding="async"
+                draggable="false"
+              />
             </div>
 
             {/* Subtitle */}
@@ -134,14 +151,6 @@ const Onboarding = ({ onComplete }) => {
               </p>
             </div>
 
-            {/* Waveform Animation */}
-            <div className="mt-8 h-12 relative overflow-hidden opacity-30">
-              <div className="waveform-bar"></div>
-              <div className="waveform-bar" style={{ animationDelay: '0.1s' }}></div>
-              <div className="waveform-bar" style={{ animationDelay: '0.2s' }}></div>
-              <div className="waveform-bar" style={{ animationDelay: '0.3s' }}></div>
-              <div className="waveform-bar" style={{ animationDelay: '0.4s' }}></div>
-            </div>
           </div>
         );
 
@@ -532,7 +541,7 @@ const Onboarding = ({ onComplete }) => {
   };
 
   return (
-    <div className="min-h-screen onboarding-bg flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen onboarding-bg flex items-center justify-center px-6 sm:px-12 lg:px-24 py-12 md:py-16 relative overflow-hidden">
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {/* Geometric Particles Grid */}
@@ -551,7 +560,7 @@ const Onboarding = ({ onComplete }) => {
         <div className="onboarding-emblem" aria-hidden="true"></div>
       </div>
 
-      <div className="max-w-2xl w-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-lg shadow-2xl relative z-10">
+      <div className="max-w-2xl w-full bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-2xl shadow-2xl relative z-10">
         {/* Progress Bar */}
         <div className="px-6 pt-6">
           <div className="flex items-center justify-between mb-4">
