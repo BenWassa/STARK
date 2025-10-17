@@ -55,7 +55,7 @@ STARK uses **GitHub Actions** for automatic deployment to GitHub Pages. Simply p
 1. Push code changes to `main` branch
 2. GitHub Actions automatically builds the project
 3. Built files are deployed to GitHub Pages
-4. Your PWA is live at `https://benwassa.github.io/STARK/`
+4. Your PWA is live at `https://[username].github.io/[repository-name]/`
 
 ### Manual Development (Optional)
 For local development and testing:
@@ -83,7 +83,7 @@ cd frontend
 3. Set **Source** to `GitHub Actions`
 4. Save changes
 
-Your PWA will be available at `https://benwassa.github.io/STARK/`
+Your PWA will be available at `https://[username].github.io/[repository-name]/`
 
 ---
 
