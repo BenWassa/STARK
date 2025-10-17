@@ -570,6 +570,10 @@ const FitnessModule = () => {
   const domainConfig = getDomainConfig();
   const measurementSystem = userData.measurementSystem || 'metric';
 
+  const updateField = (field, value) => {
+    setUserData(prev => ({ ...prev, [field]: parseFloat(value) || 0 }));
+  };
+
   const handleOpenDomainModal = (domainKey) => {
     setActiveDomain(domainKey);
   };
@@ -676,26 +680,6 @@ const FitnessModule = () => {
               className="w-full px-3 py-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
-        </div>
-      </div>
-
-      {/* Domain Inputs */}
-      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5 mb-6">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Domain Metrics</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {domainConfig.map(({ key }) => (
-            <div key={key}>
-              <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-2">
-                {key === 'bodyComp' ? 'Body Comp' : key}
-              </label>
-              <input
-                type="number"
-                value={userData[key]}
-                onChange={(e) => updateField(key, e.target.value)}
-                className="w-full px-3 py-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-          ))}
         </div>
       </div>
 
