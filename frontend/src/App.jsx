@@ -1,6 +1,8 @@
 import React, { useState, useEffect, createContext, useContext, useRef } from 'react';
-import { Moon, Sun, Download, Zap, Battery, Droplet, Heart, TrendingUp, Trash2, Ruler, Play, Database, Upload, X, Info, Menu } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Download, Zap, Battery, Droplet, Heart, TrendingUp, Trash2, Ruler, Play, Database, Upload, X, Info, Menu, Edit, ChevronLeft, ChevronRight } from 'lucide-react';
 import normativeDataRaw from './data/exercise_metrics.json' assert { type: 'json' };
+import exerciseMetricsData from './data/exercise_metrics.json' assert { type: 'json' };
 import { buildNormativeData } from './utils/norms';
 
 // Build normalized normativeData for app usage
@@ -17,55 +19,17 @@ const DataContext = createContext();
 export { DataContext, ThemeContext };
 
 const ThemeProvider = ({ children }) => {
-  const [darkMode, setDarkMode] = useState(() => {
-    if (typeof document !== 'undefined') {
-      document.documentElement.classList.add('dark');
-    }
-    return true;
-  });
+  const [darkMode] = useState(true); // Always dark mode
   const [themeLoading, setThemeLoading] = useState(true);
 
   useEffect(() => {
-    // Load theme preference from IndexedDB
-    const loadTheme = async () => {
-      try {
-        const saved = await loadAppState('starkDarkMode');
-        if (saved !== null) {
-          setDarkMode(saved === 'true');
-        }
-      } catch (error) {
-        console.error('Failed to load theme:', error);
-      } finally {
-        setThemeLoading(false);
-      }
-    };
-
-    loadTheme();
+    // Ensure dark mode is always applied
+    document.documentElement.classList.add('dark');
+    setThemeLoading(false);
   }, []);
 
-  useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-
-    if (!themeLoading) {
-      // Save theme preference to IndexedDB
-      const saveTheme = async () => {
-        try {
-          await saveAppState('starkDarkMode', String(darkMode));
-        } catch (error) {
-          console.error('Failed to save theme:', error);
-        }
-      };
-
-      saveTheme();
-    }
-  }, [darkMode, themeLoading]);
-
   return (
-    <ThemeContext.Provider value={{ darkMode, setDarkMode }}>
+    <ThemeContext.Provider value={{ darkMode }}>
       {children}
     </ThemeContext.Provider>
   );
@@ -76,7 +40,9 @@ const DataProvider = ({ children, isDevMode, runOnboarding, clearAllAppData, loa
     age: 26,
     gender: 'male',
     vo2max: 52,
+    birthdate: '', // YYYY-MM-DD format
     measurementSystem: 'metric', // 'metric' or 'imperial'
+    loggedExercises: {}, // { exerciseId: value }
     strength: 50,
     endurance: 45,
     power: 40,
@@ -283,6 +249,12 @@ const FitnessModule = () => {
   const { darkMode } = useContext(ThemeContext);
   const { userData, setUserData } = useContext(DataContext);
   const [results, setResults] = useState(null);
+  const [showProfileEditModal, setShowProfileEditModal] = useState(false);
+  const [tempBirthdate, setTempBirthdate] = useState('');
+  const [tempVo2max, setTempVo2max] = useState('');
+  const [showLogModal, setShowLogModal] = useState(false);
+  const [logStep, setLogStep] = useState(0);
+  const [tempExercises, setTempExercises] = useState({});
 
   useEffect(() => {
     const results = calculateUserResults(userData);
@@ -297,123 +269,375 @@ const FitnessModule = () => {
 
   return (
     <>
+      {/* ==================== PERFORMANCE SUMMARY ==================== */}
       {/* Summary Cards */}
       {results && (
         <div className="grid grid-cols-3 gap-3 mb-4">
-          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-3 shadow-lg shadow-blue-500/10"
+          >
             <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
               Fitness Index
             </h3>
             <p className="text-2xl font-bold text-gray-900 dark:text-white">{results.fitnessIndex}</p>
             <p className="text-xs text-gray-500 dark:text-gray-400">Overall Score</p>
-          </div>
-          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3">
+          </motion.div>
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-3 shadow-lg shadow-blue-500/10"
+          >
             <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
               Fitness Age
             </h3>
             <p className="text-2xl font-bold text-gray-900 dark:text-white">{results.fitnessAge}</p>
             <p className="text-xs text-gray-500 dark:text-gray-400">Years</p>
-          </div>
-          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3">
+          </motion.div>
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-3 shadow-lg shadow-blue-500/10"
+          >
             <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
               VO₂max
             </h3>
             <p className="text-2xl font-bold text-gray-900 dark:text-white">{results.vo2max}</p>
             <p className="text-xs text-gray-500 dark:text-gray-400">mL/kg/min</p>
-          </div>
+          </motion.div>
         </div>
       )}
 
+      {/* ==================== DOMAIN PERFORMANCE OVERVIEW ==================== */}
       {/* Spider Chart */}
       {results && (
-        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 mb-6">
+        <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-6 mb-6 shadow-lg shadow-blue-500/10">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 text-center">
             Domain Performance Overview
           </h2>
           <SpiderChart data={results.domains} darkMode={darkMode} />
-          <div className="text-xs text-gray-500 dark:text-gray-400 text-center mt-4">
-            Based on: <span className="font-semibold">{normativeData.source}</span><br/>
-            Dataset version {normativeData.version} • Updated {normativeData.lastUpdated}
+          <div className="flex justify-center mt-4">
+            <button
+              onClick={() => {
+                // Initialize temp exercises with existing logged values
+                setTempExercises(userData.loggedExercises || {});
+                setLogStep(0);
+                setShowLogModal(true);
+              }}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white rounded-2xl transition-all duration-200"
+            >
+              <Database className="w-4 h-4" />
+              Log New Lifts
+            </button>
           </div>
         </div>
       )}
 
+      {/* ==================== USER PROFILE ==================== */}
       {/* User Profile */}
-      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5 mb-6">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Profile</h2>
+      <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-5 mb-6 shadow-lg shadow-blue-500/10">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Profile</h2>
+          <button
+            onClick={() => {
+              setTempBirthdate(userData.birthdate || '');
+              setTempVo2max(userData.vo2max || '');
+              setShowProfileEditModal(true);
+            }}
+            className="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-gradient-to-r from-blue-500 to-teal-500 hover:from-blue-600 hover:to-teal-600 text-white rounded-2xl transition-all duration-200"
+          >
+            <Edit className="w-4 h-4" />
+            Edit
+          </button>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-2">
               Age
             </label>
-            <input
-              type="number"
-              value={userData.age}
-              onChange={(e) => updateField('age', e.target.value)}
-              className="w-full px-3 py-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-            />
+            <p className="text-sm text-gray-900 dark:text-white py-2">
+              {userData.birthdate ? 
+                Math.floor((new Date() - new Date(userData.birthdate)) / (365.25 * 24 * 60 * 60 * 1000)) :
+                userData.age
+              } years old
+            </p>
           </div>
           <div>
             <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-2">
               Gender
             </label>
-            <select
-              value={userData.gender}
-              onChange={(e) => setUserData(prev => ({ ...prev, gender: e.target.value }))}
-              className="w-full px-3 py-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-            </select>
+            <p className="text-sm text-gray-900 dark:text-white py-2 capitalize">
+              {userData.gender}
+            </p>
           </div>
           <div>
             <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-2">
               VO₂max
             </label>
-            <input
-              type="number"
-              value={userData.vo2max}
-              onChange={(e) => updateField('vo2max', e.target.value)}
-              className="w-full px-3 py-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-            />
+            <p className="text-sm text-gray-900 dark:text-white py-2">
+              {userData.vo2max} ml/kg/min
+            </p>
           </div>
         </div>
       </div>
 
-      {/* Domain Inputs */}
-      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5 mb-6">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Domain Metrics</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {domainConfig.map(({ key }) => (
-            <div key={key}>
-              <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-2">
-                {key === 'bodyComp' ? 'Body Comp' : key}
-              </label>
-              <input
-                type="number"
-                value={userData[key]}
-                onChange={(e) => updateField(key, e.target.value)}
-                className="w-full px-3 py-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-              />
+      {/* Profile Edit Modal */}
+      {showProfileEditModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Edit Profile</h3>
+              <button
+                onClick={() => setShowProfileEditModal(false)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
-          ))}
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Birthdate
+                </label>
+                <input
+                  type="date"
+                  value={tempBirthdate}
+                  onChange={(e) => setTempBirthdate(e.target.value)}
+                  className="w-full px-3 py-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  VO₂max (ml/kg/min)
+                </label>
+                <input
+                  type="number"
+                  value={tempVo2max}
+                  onChange={(e) => setTempVo2max(e.target.value)}
+                  className="w-full px-3 py-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+            </div>
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setShowProfileEditModal(false)}
+                className="flex-1 px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-600 rounded-2xl hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  const newAge = tempBirthdate ? 
+                    Math.floor((new Date() - new Date(tempBirthdate)) / (365.25 * 24 * 60 * 60 * 1000)) : 
+                    userData.age;
+                  setUserData(prev => ({
+                    ...prev,
+                    birthdate: tempBirthdate,
+                    age: newAge,
+                    vo2max: parseFloat(tempVo2max) || prev.vo2max
+                  }));
+                  setShowProfileEditModal(false);
+                }}
+                className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-500 to-teal-500 hover:from-blue-600 hover:to-teal-600 text-white rounded-2xl transition-all duration-200"
+              >
+                Save
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Domain Cards */}
-      {results && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {domainConfig.map(({ key, icon }) => (
-            <DomainCard
-              key={key}
-              domain={key}
-              score={userData[key]}
-              percentile={results.domains[key]}
-              zScore={results.zScores[key]}
-              icon={icon}
-            />
-          ))}
+      {/* Log Lifts Modal */}
+      {showLogModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col shadow-2xl"
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-display font-semibold text-gray-900 dark:text-white">
+                Log Your Progress
+              </h3>
+              <button
+                onClick={() => setShowLogModal(false)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Progress Indicator */}
+            <div className="flex justify-center gap-2 mb-6">
+              {Object.keys(exerciseMetricsData.exerciseMetrics).map((_, index) => (
+                <div
+                  key={index}
+                  className={`h-2 w-12 rounded-full transition-all duration-300 ${
+                    index === logStep
+                      ? 'bg-gradient-to-r from-blue-500 to-teal-500'
+                      : index < logStep
+                      ? 'bg-green-500'
+                      : 'bg-gray-300 dark:bg-gray-600'
+                  }`}
+                />
+              ))}
+            </div>
+
+            {/* Domain Cards */}
+            <div className="flex-1 overflow-y-auto mb-4">
+              <AnimatePresence mode="wait">
+                {(() => {
+                  const domains = Object.keys(exerciseMetricsData.exerciseMetrics);
+                  const currentDomain = domains[logStep];
+                  const exercises = exerciseMetricsData.exerciseMetrics[currentDomain];
+                  const domainIcons = {
+                    strength: TrendingUp,
+                    endurance: Heart,
+                    power: Zap,
+                    mobility: TrendingUp,
+                    bodyComp: Droplet,
+                    recovery: Battery
+                  };
+                  const DomainIcon = domainIcons[currentDomain];
+
+                  return (
+                    <motion.div
+                      key={logStep}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      transition={{ duration: 0.3 }}
+                      className="space-y-4"
+                    >
+                      {/* Domain Header */}
+                      <div className="flex items-center gap-3 mb-6">
+                        <div className="p-3 bg-gradient-to-br from-blue-500 to-teal-500 rounded-xl">
+                          <DomainIcon className="w-6 h-6 text-white" />
+                        </div>
+                        <div>
+                          <h4 className="text-lg font-display font-semibold text-gray-900 dark:text-white capitalize">
+                            {currentDomain === 'bodyComp' ? 'Body Composition' : currentDomain}
+                          </h4>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            Update your {currentDomain} metrics
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Exercise Inputs */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {exercises.map((exercise) => (
+                          <div key={exercise.id}>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                              {exercise.name}
+                              <span className="text-gray-500 dark:text-gray-400 ml-1">
+                                ({exercise.unit})
+                              </span>
+                            </label>
+                            <input
+                              type="number"
+                              value={tempExercises[exercise.id] || ''}
+                              onChange={(e) => setTempExercises(prev => ({ 
+                                ...prev, 
+                                [exercise.id]: e.target.value 
+                              }))}
+                              placeholder={`e.g. ${exercise.defaultValue}`}
+                              className="w-full px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                            />
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                              {exercise.description}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </motion.div>
+                  );
+                })()}
+              </AnimatePresence>
+            </div>
+
+            {/* Navigation */}
+            <div className="flex items-center justify-between gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <button
+                onClick={() => {
+                  if (logStep > 0) setLogStep(logStep - 1);
+                }}
+                disabled={logStep === 0}
+                className="inline-flex items-center gap-2 px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-600 rounded-2xl hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                Back
+              </button>
+
+              <button
+                onClick={() => {
+                  // Save only the filled exercises
+                  setUserData(prev => ({
+                    ...prev,
+                    loggedExercises: {
+                      ...prev.loggedExercises,
+                      ...Object.fromEntries(
+                        Object.entries(tempExercises).filter(([_, value]) => value !== '' && value !== null)
+                      )
+                    }
+                  }));
+                  setShowLogModal(false);
+                  setLogStep(0);
+                }}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-teal-500 hover:from-blue-600 hover:to-teal-600 text-white rounded-2xl transition-all duration-200"
+              >
+                <Database className="w-4 h-4" />
+                Save & Finish
+              </button>
+
+              {logStep < Object.keys(exerciseMetricsData.exerciseMetrics).length - 1 ? (
+                <button
+                  onClick={() => setLogStep(logStep + 1)}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white rounded-2xl transition-all duration-200"
+                >
+                  Next
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              ) : (
+                <button
+                  onClick={() => setLogStep(logStep + 1)}
+                  disabled
+                  className="invisible"
+                >
+                  Placeholder
+                </button>
+              )}
+            </div>
+          </motion.div>
         </div>
+      )}
+
+      {/* ==================== DOMAIN PERFORMANCE BREAKDOWN ==================== */}
+      {/* Domain Performance Breakdown */}
+      {results && (
+        <>
+          <h2 className="text-xl font-display font-semibold text-gray-900 dark:text-white mb-4">
+            Domain Performance Breakdown
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {domainConfig.map(({ key, icon }) => (
+              <DomainCard
+                key={key}
+                domain={key}
+                score={userData[key]}
+                percentile={results.domains[key]}
+                zScore={results.zScores[key]}
+                icon={icon}
+              />
+            ))}
+          </div>
+        </>
       )}
     </>
   );
@@ -611,17 +835,6 @@ const Shell = ({ children }) => {
                 </button>
               )}
               <button
-                onClick={() => setDarkMode(!darkMode)}
-                className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                title="Toggle Theme"
-              >
-                {darkMode ? (
-                  <Sun className="w-5 h-5 text-gray-300" />
-                ) : (
-                  <Moon className="w-5 h-5 text-gray-600" />
-                )}
-              </button>
-              <button
                 onClick={toggleMeasurementSystem}
                 className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                 title={`Switch to ${userData.measurementSystem === 'metric' ? 'Imperial' : 'Metric'} units`}
@@ -733,6 +946,11 @@ const Shell = ({ children }) => {
                     </dd>
                   </div>
                 </dl>
+                <div className="mt-4 text-xs text-gray-500 dark:text-gray-400">
+                  <p className="font-semibold">Dataset Information</p>
+                  <p>Based on: {normativeData.source}</p>
+                  <p>Dataset version {normativeData.version} • Updated {normativeData.lastUpdated}</p>
+                </div>
               </section>
             </div>
           </aside>
