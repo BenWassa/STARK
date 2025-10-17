@@ -66,7 +66,7 @@ const ThemeProvider = ({ children }) => {
   );
 };
 
-const DataProvider = ({ children, isDevMode, runOnboarding, clearAllAppData, loadMockData }) => {
+const DataProvider = ({ children, isDevMode, runOnboarding, clearAllAppData, loadMockData, toggleMeasurementSystem }) => {
   const [userData, setUserData] = useState({
     age: 26,
     gender: 'male',
@@ -117,7 +117,7 @@ const DataProvider = ({ children, isDevMode, runOnboarding, clearAllAppData, loa
   }, [userData, isLoading]);
 
   return (
-    <DataContext.Provider value={{ userData, setUserData, isLoading, isDevMode, runOnboarding, clearAllAppData, loadMockData }}>
+    <DataContext.Provider value={{ userData, setUserData, isLoading, isDevMode, runOnboarding, clearAllAppData, loadMockData, toggleMeasurementSystem }}>
       {children}
     </DataContext.Provider>
   );
@@ -406,7 +406,7 @@ const FitnessModule = () => {
 // ==================== SHELL LAYOUT ====================
 const Shell = ({ children }) => {
   const { darkMode, setDarkMode } = useContext(ThemeContext);
-  const { userData, isDevMode, runOnboarding, clearAllAppData, loadMockData } = useContext(DataContext);
+  const { userData, isDevMode, runOnboarding, clearAllAppData, loadMockData, toggleMeasurementSystem } = useContext(DataContext);
 
   const exportData = async () => {
     try {
@@ -633,7 +633,7 @@ const App = () => {
   if (!onboardingComplete && !isDevMode) {
     return (
       <ThemeProvider>
-        <DataProvider isDevMode={isDevMode} runOnboarding={runOnboarding} clearAllAppData={clearAllAppData} loadMockData={loadMockData}>
+        <DataProvider isDevMode={isDevMode} runOnboarding={runOnboarding} clearAllAppData={clearAllAppData} loadMockData={loadMockData} toggleMeasurementSystem={toggleMeasurementSystem}>
           <Onboarding onComplete={handleOnboardingComplete} />
         </DataProvider>
       </ThemeProvider>
@@ -643,7 +643,7 @@ const App = () => {
   if (showOnboarding) {
     return (
       <ThemeProvider>
-        <DataProvider isDevMode={isDevMode} runOnboarding={runOnboarding} clearAllAppData={clearAllAppData} loadMockData={loadMockData}>
+        <DataProvider isDevMode={isDevMode} runOnboarding={runOnboarding} clearAllAppData={clearAllAppData} loadMockData={loadMockData} toggleMeasurementSystem={toggleMeasurementSystem}>
           <Onboarding onComplete={() => {
             setShowOnboarding(false);
             handleOnboardingComplete();
@@ -655,7 +655,7 @@ const App = () => {
 
   return (
     <ThemeProvider>
-      <DataProvider isDevMode={isDevMode} runOnboarding={runOnboarding} clearAllAppData={clearAllAppData} loadMockData={loadMockData}>
+      <DataProvider isDevMode={isDevMode} runOnboarding={runOnboarding} clearAllAppData={clearAllAppData} loadMockData={loadMockData} toggleMeasurementSystem={toggleMeasurementSystem}>
         <Shell>
           <FitnessModule />
         </Shell>
