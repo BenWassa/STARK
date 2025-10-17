@@ -1,4 +1,4 @@
-const CACHE_NAME = 'stark-fitness-v1';
+const CACHE_NAME = 'stark-fitness-v1.1.3';
 const STATIC_CACHE_URLS = [
   './',
   './manifest.json',
