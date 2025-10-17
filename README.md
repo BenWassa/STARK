@@ -110,9 +110,9 @@ npm run dev
 
 **Option 3: VS Code Live Server**
 ```bash
-# Open docs/index.html with Live Server
-# Then add ?dev=true to the URL:
-# http://127.0.0.1:5500/?dev=true
+# Open docs/dev.html with Live Server (right-click → Open with Live Server)
+# Dev mode automatically enabled - no URL parameters needed!
+# Browser opens at: http://127.0.0.1:5500/dev.html
 ```
 
 **Option 4: Persistent (localStorage)**
@@ -128,6 +128,7 @@ When dev mode is active, you'll see:
 - 🗑️ **Clear Data button** (red trash icon) - Reset all app data
 - ▶️ **Run Onboarding button** (blue play icon) - Test onboarding flow
 - 🗄️ **Load Mock Data button** (green database icon) - Populate with sample data
+- 📋 **Console logs** confirming dev mode activation and available tools
 
 ### Dev Workflow
 
