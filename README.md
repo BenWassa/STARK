@@ -83,7 +83,63 @@ cd frontend
 3. Set **Source** to `GitHub Actions`
 4. Save changes
 
-Your PWA will be available at `https://[username].github.io/[repository-name]/`
+Your PWA will be available at `https://benwassa.github.io/STARK/`
+
+---
+
+## 🛠️ Development Mode
+
+STARK includes a **development mode** for faster testing and debugging. Dev mode provides additional tools and skips the onboarding flow.
+
+### Enabling Dev Mode
+
+**Option 1: URL Parameter (Recommended)**
+```
+https://benwassa.github.io/STARK/?dev=true
+```
+
+**Option 2: Local Development Server**
+```bash
+# Start local dev server
+cd frontend
+npm run dev
+
+# Then visit with dev parameter:
+# http://localhost:5173/?dev=true
+```
+
+**Option 3: VS Code Live Server**
+```bash
+# Open docs/index.html with Live Server
+# Then add ?dev=true to the URL:
+# http://127.0.0.1:5500/?dev=true
+```
+
+**Option 4: Persistent (localStorage)**
+```javascript
+// Run in browser console, then refresh
+localStorage.setItem('starkDevMode', 'true');
+```
+
+### Dev Mode Features
+
+When dev mode is active, you'll see:
+- 🏷️ **"DEV" badge** in the header
+- 🗑️ **Clear Data button** (red trash icon) - Reset all app data
+- ▶️ **Run Onboarding button** (blue play icon) - Test onboarding flow
+- 🗄️ **Load Mock Data button** (green database icon) - Populate with sample data
+
+### Dev Workflow
+
+```bash
+1. Enable dev mode (?dev=true)
+2. Click "Load Mock Data" for instant testing
+3. Test features with realistic sample data
+4. Click "Run Onboarding" to test user flow
+5. Click "Clear Data" to reset for next test
+```
+
+**Dev mode is completely hidden in production and only accessible via URL parameters or localStorage.**
 
 ---
 
