@@ -583,8 +583,8 @@ const Onboarding = ({ onComplete }) => {
         {/* Content */}
         <div className="px-6 py-8">
           {(showStepTitle || showStepDescription || isBasicStep) && (
-            <div className={`mb-6 ${isBasicStep ? 'md:flex md:items-start md:justify-between md:gap-6' : ''}`}>
-              <div>
+            <div className={`mb-6 ${isBasicStep ? 'md:flex md:items-center md:justify-between md:gap-8 lg:gap-12' : ''}`}>
+              <div className={isBasicStep ? 'md:max-w-xl' : ''}>
                 {showStepTitle && (
                   <h1 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
                     {currentStepMeta.title}
@@ -608,11 +608,11 @@ const Onboarding = ({ onComplete }) => {
                 )}
               </div>
               {isBasicStep && (
-                <div className="hidden md:block">
+                <div className="hidden md:block flex-shrink-0">
                   <img
                     src={starkPersonHealth}
                     alt="Performance visualization"
-                    className="w-32 h-32 drop-shadow-2xl select-none pointer-events-none"
+                    className="w-28 h-28 lg:w-32 lg:h-32 drop-shadow-2xl select-none pointer-events-none"
                     decoding="async"
                     draggable="false"
                   />
