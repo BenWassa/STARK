@@ -152,6 +152,22 @@ const Onboarding = ({ onComplete }) => {
                 </p>
               </div>
             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Measurement System
+              </label>
+              <select
+                value={userData.measurementSystem || 'metric'}
+                onChange={(e) => setUserData(prev => ({ ...prev, measurementSystem: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              >
+                <option value="metric">Metric (kg, cm, km)</option>
+                <option value="imperial">Imperial (lbs, ft, miles)</option>
+              </select>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Choose your preferred unit system. You can change this later in settings.
+              </p>
+            </div>
           </div>
         );
 

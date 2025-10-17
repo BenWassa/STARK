@@ -1,5 +1,5 @@
 import React, { useState, useEffect, createContext, useContext } from 'react';
-import { Moon, Sun, Download, Activity, Zap, Battery, Droplet, Heart, TrendingUp, Trash2 } from 'lucide-react';
+import { Moon, Sun, Download, Activity, Zap, Battery, Droplet, Heart, TrendingUp, Trash2, Ruler } from 'lucide-react';
 import normativeDataRaw from './data/exercise_metrics.json' assert { type: 'json' };
 import { calculateZScore, zScoreToPercentile, getPerformanceLabel, calculateFitnessIndex, calculateFitnessAge, calculateUserResults, getDomainConfig, exportUserData } from './utils/calculations';
 import { saveUserData, loadUserData, saveAppState, loadAppState, exportAllData, clearAllData } from './utils/storage';
@@ -67,6 +67,7 @@ const DataProvider = ({ children }) => {
     age: 26,
     gender: 'male',
     vo2max: 52,
+    measurementSystem: 'metric', // 'metric' or 'imperial'
     strength: 50,
     endurance: 45,
     power: 40,
@@ -467,6 +468,13 @@ const Shell = ({ children }) => {
                   <Moon className="w-5 h-5 text-gray-600" />
                 )}
               </button>
+              <button
+                onClick={toggleMeasurementSystem}
+                className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                title={`Switch to ${userData.measurementSystem === 'metric' ? 'Imperial' : 'Metric'} units`}
+              >
+                <Ruler className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+              </button>
             </div>
           </div>
         </div>
@@ -522,6 +530,11 @@ const App = () => {
         alert('Error clearing data. Check console for details.');
       }
     }
+  };
+
+  const toggleMeasurementSystem = () => {
+    const newSystem = userData.measurementSystem === 'metric' ? 'imperial' : 'metric';
+    setUserData(prev => ({ ...prev, measurementSystem: newSystem }));
   };
 
   useEffect(() => {
