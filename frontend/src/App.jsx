@@ -62,7 +62,7 @@ const ThemeProvider = ({ children }) => {
   );
 };
 
-const DataProvider = ({ children }) => {
+const DataProvider = ({ children, isDevMode }) => {
   const [userData, setUserData] = useState({
     age: 26,
     gender: 'male',
@@ -611,7 +611,7 @@ const App = () => {
   if (!onboardingComplete && !isDevMode) {
     return (
       <ThemeProvider>
-        <DataProvider>
+        <DataProvider isDevMode={isDevMode}>
           <Onboarding onComplete={handleOnboardingComplete} />
         </DataProvider>
       </ThemeProvider>
@@ -621,7 +621,7 @@ const App = () => {
   if (showOnboarding) {
     return (
       <ThemeProvider>
-        <DataProvider>
+        <DataProvider isDevMode={isDevMode}>
           <Onboarding onComplete={() => {
             setShowOnboarding(false);
             handleOnboardingComplete();
@@ -633,7 +633,7 @@ const App = () => {
 
   return (
     <ThemeProvider>
-      <DataProvider>
+      <DataProvider isDevMode={isDevMode}>
         <Shell>
           <FitnessModule />
         </Shell>
