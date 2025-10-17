@@ -1,6 +1,10 @@
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import { Moon, Sun, Download, Activity, Zap, Battery, Droplet, Heart, TrendingUp, Trash2, Ruler, Play, Database } from 'lucide-react';
 import normativeDataRaw from './data/exercise_metrics.json' assert { type: 'json' };
+import { buildNormativeData } from './utils/norms';
+
+// Build normalized normativeData for app usage
+const normativeData = buildNormativeData(normativeDataRaw);
 import { calculateZScore, zScoreToPercentile, getPerformanceLabel, calculateFitnessIndex, calculateFitnessAge, calculateUserResults, getDomainConfig, exportUserData } from './utils/calculations';
 import { saveUserData, loadUserData, saveAppState, loadAppState, exportAllData, clearAllData } from './utils/storage';
 import packageJson from '../package.json' assert { type: 'json' };
