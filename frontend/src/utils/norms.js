@@ -43,6 +43,8 @@ export const buildNormativeData = (rawData) => {
     return acc;
   }, {});
 
+  const exerciseMetrics = rawData?.exerciseMetrics || {};
+
   const vo2maxNorms = Object.entries(rawData?.vo2maxNorms || {}).reduce((acc, [gender, entries]) => {
     acc[gender] = entries
       .map((entry) => {
@@ -67,6 +69,7 @@ export const buildNormativeData = (rawData) => {
     lastUpdated: rawData?.lastUpdated || '2024-10',
     source: rawData?.source || 'ACSM Guidelines, 11th Ed.',
     domains,
+    exerciseMetrics,
     vo2maxNorms,
     dataSource: rawData?.dataSource
   };

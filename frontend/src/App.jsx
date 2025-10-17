@@ -1,26 +1,58 @@
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import { Moon, Sun, Download, Activity, Zap, Battery, Droplet, Heart, TrendingUp } from 'lucide-react';
-import normativeDataRaw from './data/normative_data.json' assert { type: 'json' };
+import normativeDataRaw from './data/exercise_metrics.json' assert { type: 'json' };
 import { buildNormativeData } from './utils/norms';
+import { saveUserData, loadUserData, saveAppState, loadAppState, exportAllData } from './utils/storage';
+import Onboarding from './components/Onboarding';
 
 // ==================== CONTEXTS ====================
 const ThemeContext = createContext();
 const DataContext = createContext();
 
+export { DataContext, ThemeContext };
+
 const ThemeProvider = ({ children }) => {
-  const [darkMode, setDarkMode] = useState(() => {
-    const saved = localStorage.getItem('starkDarkMode');
-    return saved === 'true';
-  });
+  const [darkMode, setDarkMode] = useState(false);
+  const [themeLoading, setThemeLoading] = useState(true);
 
   useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
+    // Load theme preference from IndexedDB
+    const loadTheme = async () => {
+      try {
+        const saved = await loadAppState('starkDarkMode');
+        if (saved !== null) {
+          setDarkMode(saved === 'true');
+        }
+      } catch (error) {
+        console.error('Failed to load theme:', error);
+      } finally {
+        setThemeLoading(false);
+      }
+    };
+
+    loadTheme();
+  }, []);
+
+  useEffect(() => {
+    if (!themeLoading) {
+      if (darkMode) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+
+      // Save theme preference to IndexedDB
+      const saveTheme = async () => {
+        try {
+          await saveAppState('starkDarkMode', String(darkMode));
+        } catch (error) {
+          console.error('Failed to save theme:', error);
+        }
+      };
+
+      saveTheme();
     }
-    localStorage.setItem('starkDarkMode', String(darkMode));
-  }, [darkMode]);
+  }, [darkMode, themeLoading]);
 
   return (
     <ThemeContext.Provider value={{ darkMode, setDarkMode }}>
@@ -30,27 +62,56 @@ const ThemeProvider = ({ children }) => {
 };
 
 const DataProvider = ({ children }) => {
-  const [userData, setUserData] = useState(() => {
-    const saved = localStorage.getItem('starkUserData');
-    return saved ? JSON.parse(saved) : {
-      age: 26,
-      gender: 'male',
-      vo2max: 52,
-      strength: 50,
-      endurance: 45,
-      power: 40,
-      mobility: 55,
-      bodyComp: 60,
-      recovery: 50
-    };
+  const [userData, setUserData] = useState({
+    age: 26,
+    gender: 'male',
+    vo2max: 52,
+    strength: 50,
+    endurance: 45,
+    power: 40,
+    mobility: 55,
+    bodyComp: 60,
+    recovery: 50
   });
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    localStorage.setItem('starkUserData', JSON.stringify(userData));
-  }, [userData]);
+    // Load data from IndexedDB on mount
+    const loadData = async () => {
+      try {
+        const savedData = await loadUserData();
+        if (savedData) {
+          setUserData(savedData);
+        }
+      } catch (error) {
+        console.error('Failed to load user data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  // Save to IndexedDB whenever userData changes
+  useEffect(() => {
+    if (!isLoading) {
+      const saveData = async () => {
+        try {
+          await saveUserData(userData);
+        } catch (error) {
+          console.error('Failed to save user data:', error);
+        }
+      };
+
+      // Debounce saves to avoid excessive writes
+      const timeoutId = setTimeout(saveData, 500);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [userData, isLoading]);
 
   return (
-    <DataContext.Provider value={{ userData, setUserData }}>
+    <DataContext.Provider value={{ userData, setUserData, isLoading }}>
       {children}
     </DataContext.Provider>
   );
@@ -428,47 +489,21 @@ const Shell = ({ children }) => {
   const { darkMode, setDarkMode } = useContext(ThemeContext);
   const { userData } = useContext(DataContext);
 
-  const exportData = () => {
-    const domainScores = {};
-    const domainPercentiles = {};
-    const domainZScores = {};
-
-    Object.entries(normativeData.domains).forEach(([domain, config]) => {
-      const value = userData[domain];
-      const z = calculateZScore(value, config.mean, config.std);
-      const percentile = zScoreToPercentile(z);
-      
-      domainScores[domain] = value;
-      domainPercentiles[domain] = percentile;
-      domainZScores[domain] = z;
-    });
-
-    const fitnessIndex = calculateFitnessIndex(domainScores);
-    const fitnessAge = calculateFitnessAge(userData.age, userData.vo2max, userData.gender);
-
-    const data = {
-      userData,
-      results: {
-        fitnessIndex,
-        fitnessAge,
-        vo2max: userData.vo2max,
-        domains: domainPercentiles,
-        zScores: domainZScores
-      },
-      metadata: {
-        version: normativeData.version,
-        description: normativeData.description,
-        source: normativeData.source,
-        generatedAt: new Date().toISOString()
+  const exportData = async () => {
+    try {
+      const exportedData = await exportAllData();
+      if (exportedData) {
+        const blob = new Blob([JSON.stringify(exportedData, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `stark-fitness-${new Date().toISOString().split('T')[0]}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
       }
-    };
-
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `stark-fitness-${new Date().toISOString().split('T')[0]}.json`;
-    a.click();
+    } catch (error) {
+      console.error('Failed to export data:', error);
+    }
   };
 
   return (
@@ -518,6 +553,45 @@ const Shell = ({ children }) => {
 
 // ==================== APP ====================
 const App = () => {
+  const [onboardingComplete, setOnboardingComplete] = useState(false);
+  const [appLoading, setAppLoading] = useState(true);
+
+  useEffect(() => {
+    // Check if onboarding is complete
+    const checkOnboarding = async () => {
+      try {
+        const complete = await loadAppState('onboardingComplete');
+        setOnboardingComplete(complete === true);
+      } catch (error) {
+        console.error('Failed to check onboarding status:', error);
+        setOnboardingComplete(false);
+      } finally {
+        setAppLoading(false);
+      }
+    };
+
+    checkOnboarding();
+  }, []);
+
+  const handleOnboardingComplete = () => {
+    setOnboardingComplete(true);
+  };
+
+  if (appLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <Activity className="w-8 h-8 text-blue-500 animate-spin mx-auto mb-4" />
+          <p className="text-gray-600 dark:text-gray-400">Loading STARK...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!onboardingComplete) {
+    return <Onboarding onComplete={handleOnboardingComplete} />;
+  }
+
   return (
     <ThemeProvider>
       <DataProvider>

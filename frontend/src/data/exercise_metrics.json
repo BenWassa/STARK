@@ -1,0 +1,207 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2025-10-17",
+  "description": "Comprehensive exercise metrics for STARK fitness assessment",
+  "source": "Based on ACSM guidelines and fitness assessment standards",
+
+  "domainWeights": {
+    "strength": 0.20,
+    "endurance": 0.25,
+    "power": 0.15,
+    "mobility": 0.10,
+    "bodyComp": 0.15,
+    "recovery": 0.15
+  },
+
+  "exerciseMetrics": {
+    "strength": [
+      {
+        "id": "bench_press_1rm",
+        "name": "Bench Press 1RM",
+        "unit": "kg",
+        "description": "Maximum weight you can lift once for bench press",
+        "inputType": "number",
+        "min": 0,
+        "max": 500,
+        "defaultValue": 60
+      },
+      {
+        "id": "squat_1rm",
+        "name": "Squat 1RM",
+        "unit": "kg",
+        "description": "Maximum weight you can lift once for back squat",
+        "inputType": "number",
+        "min": 0,
+        "max": 600,
+        "defaultValue": 80
+      },
+      {
+        "id": "deadlift_1rm",
+        "name": "Deadlift 1RM",
+        "unit": "kg",
+        "description": "Maximum weight you can lift once for conventional deadlift",
+        "inputType": "number",
+        "min": 0,
+        "max": 700,
+        "defaultValue": 100
+      },
+      {
+        "id": "overhead_press_1rm",
+        "name": "Overhead Press 1RM",
+        "unit": "kg",
+        "description": "Maximum weight you can lift once for overhead press",
+        "inputType": "number",
+        "min": 0,
+        "max": 200,
+        "defaultValue": 40
+      }
+    ],
+    "endurance": [
+      {
+        "id": "resting_hr",
+        "name": "Resting Heart Rate",
+        "unit": "bpm",
+        "description": "Your resting heart rate in beats per minute",
+        "inputType": "number",
+        "min": 40,
+        "max": 100,
+        "defaultValue": 65
+      },
+      {
+        "id": "pushup_max",
+        "name": "Maximum Push-ups",
+        "unit": "reps",
+        "description": "Maximum number of consecutive push-ups you can perform",
+        "inputType": "number",
+        "min": 0,
+        "max": 200,
+        "defaultValue": 20
+      },
+      {
+        "id": "plank_time",
+        "name": "Plank Hold Time",
+        "unit": "seconds",
+        "description": "Maximum time you can hold a plank position",
+        "inputType": "number",
+        "min": 0,
+        "max": 600,
+        "defaultValue": 60
+      }
+    ],
+    "power": [
+      {
+        "id": "vertical_jump",
+        "name": "Vertical Jump Height",
+        "unit": "cm",
+        "description": "Maximum vertical jump height from standing position",
+        "inputType": "number",
+        "min": 0,
+        "max": 100,
+        "defaultValue": 45
+      },
+      {
+        "id": "broad_jump",
+        "name": "Broad Jump Distance",
+        "unit": "cm",
+        "description": "Maximum standing broad jump distance",
+        "inputType": "number",
+        "min": 0,
+        "max": 400,
+        "defaultValue": 200
+      }
+    ],
+    "mobility": [
+      {
+        "id": "sit_reach",
+        "name": "Sit and Reach Test",
+        "unit": "cm",
+        "description": "Distance reached beyond toes in sit and reach test",
+        "inputType": "number",
+        "min": -20,
+        "max": 50,
+        "defaultValue": 0
+      },
+      {
+        "id": "shoulder_flexibility",
+        "name": "Shoulder Flexibility",
+        "unit": "cm",
+        "description": "Distance between hands behind back",
+        "inputType": "number",
+        "min": 0,
+        "max": 30,
+        "defaultValue": 10
+      }
+    ],
+    "bodyComp": [
+      {
+        "id": "body_fat_percentage",
+        "name": "Body Fat Percentage",
+        "unit": "%",
+        "description": "Estimated body fat percentage",
+        "inputType": "number",
+        "min": 3,
+        "max": 50,
+        "defaultValue": 15
+      },
+      {
+        "id": "waist_circumference",
+        "name": "Waist Circumference",
+        "unit": "cm",
+        "description": "Waist measurement at narrowest point",
+        "inputType": "number",
+        "min": 50,
+        "max": 150,
+        "defaultValue": 80
+      }
+    ],
+    "recovery": [
+      {
+        "id": "sleep_quality",
+        "name": "Sleep Quality",
+        "unit": "/10",
+        "description": "Average sleep quality rating (1-10)",
+        "inputType": "number",
+        "min": 1,
+        "max": 10,
+        "defaultValue": 7
+      },
+      {
+        "id": "soreness_level",
+        "name": "Muscle Soreness",
+        "unit": "/10",
+        "description": "Average muscle soreness level (1-10)",
+        "inputType": "number",
+        "min": 1,
+        "max": 10,
+        "defaultValue": 3
+      },
+      {
+        "id": "stress_level",
+        "name": "Stress Level",
+        "unit": "/10",
+        "description": "Average daily stress level (1-10)",
+        "inputType": "number",
+        "min": 1,
+        "max": 10,
+        "defaultValue": 4
+      }
+    ]
+  },
+
+  "vo2maxNorms": {
+    "male": [
+      { "age": "20-29", "mean": 44, "std_dev": 8.5 },
+      { "age": "30-39", "mean": 42, "std_dev": 8.0 },
+      { "age": "40-49", "mean": 40, "std_dev": 7.5 },
+      { "age": "50-59", "mean": 37, "std_dev": 7.0 },
+      { "age": "60-69", "mean": 34, "std_dev": 7.0 }
+    ],
+    "female": [
+      { "age": "20-29", "mean": 38, "std_dev": 7.5 },
+      { "age": "30-39", "mean": 36, "std_dev": 7.0 },
+      { "age": "40-49", "mean": 34, "std_dev": 6.5 },
+      { "age": "50-59", "mean": 31, "std_dev": 6.0 },
+      { "age": "60-69", "mean": 28, "std_dev": 6.0 }
+    ]
+  }
+}
