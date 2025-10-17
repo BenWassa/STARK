@@ -224,25 +224,56 @@ const DomainCard = ({ domain, score, percentile, zScore, icon: Icon }) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-4 shadow-lg shadow-blue-500/10"
+      className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-6 shadow-lg shadow-blue-500/10 hover:shadow-xl hover:shadow-blue-500/20 transition-all duration-300"
     >
-      <div className="flex items-center gap-3 mb-3">
-        <div className={`p-2 rounded-lg ${performance.color.includes('green') ? 'bg-green-100 dark:bg-green-900/40' : performance.color.includes('blue') ? 'bg-blue-100 dark:bg-blue-900/40' : performance.color.includes('orange') ? 'bg-orange-100 dark:bg-orange-900/40' : 'bg-red-100 dark:bg-red-900/40'}`}>
-          <Icon className={`w-5 h-5 ${performance.color}`} />
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <div className={`p-3 rounded-xl ${performance.color.includes('green') ? 'bg-green-100 dark:bg-green-900/40' : performance.color.includes('blue') ? 'bg-blue-100 dark:bg-blue-900/40' : performance.color.includes('orange') ? 'bg-orange-100 dark:bg-orange-900/40' : 'bg-red-100 dark:bg-red-900/40'}`}>
+            <Icon className={`w-6 h-6 ${performance.color}`} />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{domainLabels[domain]}</h3>
+            <p className={`text-sm font-medium ${performance.color}`}>{performance.label}</p>
+          </div>
         </div>
-        <div>
-          <h3 className="font-semibold text-gray-900 dark:text-white">{domainLabels[domain]}</h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400">{performance.label}</p>
+      </div>
+      
+      <div className="mb-4">
+        <div className="flex items-baseline gap-2 mb-2">
+          <span className="text-4xl font-bold text-gray-900 dark:text-white">
+            {Math.round(percentile)}
+          </span>
+          <span className="text-lg text-gray-500 dark:text-gray-400">percentile</span>
+        </div>
+        
+        <div className="relative h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: `${percentile}%` }}
+            transition={{ duration: 1, delay: 0.2, ease: "easeOut" }}
+            className={`absolute top-0 left-0 h-full rounded-full ${
+              performance.color.includes('green') ? 'bg-gradient-to-r from-green-400 to-green-600' : 
+              performance.color.includes('blue') ? 'bg-gradient-to-r from-blue-400 to-blue-600' : 
+              performance.color.includes('orange') ? 'bg-gradient-to-r from-orange-400 to-orange-600' : 
+              'bg-gradient-to-r from-red-400 to-red-600'
+            }`}
+          />
         </div>
       </div>
-      <div className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
-        {Math.round(percentile)}
-      </div>
-      <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-        {loggedCount} of {exercises.length} exercises logged
-      </div>
-      <div className="text-xs text-gray-400 dark:text-gray-500">
-        z = {zScore.toFixed(2)}
+
+      <div className="space-y-2 pt-4 border-t border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-gray-600 dark:text-gray-400">Exercises logged</span>
+          <span className="font-semibold text-gray-900 dark:text-white">
+            {loggedCount} / {exercises.length}
+          </span>
+        </div>
+        <div className="flex items-center justify-between text-xs">
+          <span className="text-gray-500 dark:text-gray-500">Z-score</span>
+          <span className="font-mono text-gray-600 dark:text-gray-400">
+            {zScore.toFixed(2)}
+          </span>
+        </div>
       </div>
     </motion.div>
   );
@@ -627,11 +658,16 @@ const FitnessModule = () => {
       {/* ==================== DOMAIN PERFORMANCE BREAKDOWN ==================== */}
       {/* Domain Performance Breakdown */}
       {results && (
-        <>
-          <h2 className="text-xl font-display font-semibold text-gray-900 dark:text-white mb-4">
-            Domain Performance Breakdown
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="mt-8">
+          <div className="mb-6">
+            <h2 className="text-2xl font-display font-bold text-gray-900 dark:text-white mb-2">
+              Domain Performance Breakdown
+            </h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Detailed metrics for each fitness domain based on logged exercises
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {domainConfig.map(({ key, icon }) => (
               <DomainCard
                 key={key}
@@ -643,7 +679,7 @@ const FitnessModule = () => {
               />
             ))}
           </div>
-        </>
+        </div>
       )}
     </>
   );
