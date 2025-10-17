@@ -283,27 +283,27 @@ const FitnessModule = () => {
     <>
       {/* Summary Cards */}
       {results && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
-            <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
+        <div className="grid grid-cols-3 gap-3 mb-4">
+          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3">
+            <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
               Fitness Index
             </h3>
-            <p className="text-3xl font-bold text-gray-900 dark:text-white">{results.fitnessIndex}</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Overall Performance Score</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white">{results.fitnessIndex}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Overall Score</p>
           </div>
-          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
-            <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
+          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3">
+            <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
               Fitness Age
             </h3>
-            <p className="text-3xl font-bold text-gray-900 dark:text-white">{results.fitnessAge}</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Estimated Years</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white">{results.fitnessAge}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Years</p>
           </div>
-          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
-            <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
+          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3">
+            <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
               VO₂max
             </h3>
-            <p className="text-3xl font-bold text-gray-900 dark:text-white">{results.vo2max}</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">mL/kg/min</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white">{results.vo2max}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">mL/kg/min</p>
           </div>
         </div>
       )}
