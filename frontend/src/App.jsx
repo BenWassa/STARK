@@ -17,7 +17,12 @@ const DataContext = createContext();
 export { DataContext, ThemeContext };
 
 const ThemeProvider = ({ children }) => {
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(() => {
+    if (typeof document !== 'undefined') {
+      document.documentElement.classList.add('dark');
+    }
+    return true;
+  });
   const [themeLoading, setThemeLoading] = useState(true);
 
   useEffect(() => {
@@ -39,13 +44,13 @@ const ThemeProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    if (!themeLoading) {
-      if (darkMode) {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
 
+    if (!themeLoading) {
       // Save theme preference to IndexedDB
       const saveTheme = async () => {
         try {
@@ -127,9 +132,10 @@ const DataProvider = ({ children, isDevMode, runOnboarding, clearAllAppData, loa
 const SpiderChart = ({ data, darkMode }) => {
   const domains = ['strength', 'endurance', 'power', 'mobility', 'bodyComp', 'recovery'];
   const labels = ['Strength', 'Endurance', 'Power', 'Mobility', 'Body Comp', 'Recovery'];
-  const size = 400;
+  const size = 320;
+  const margin = 48;
   const center = size / 2;
-  const maxRadius = 160;
+  const maxRadius = center - margin;
   const levels = 5;
 
   const calculatePoint = (value, index) => {
@@ -143,25 +149,27 @@ const SpiderChart = ({ data, darkMode }) => {
 
   const dataPoints = domains.map((domain, i) => calculatePoint(data[domain] || 0, i));
   const polygonPath = dataPoints.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ') + ' Z';
-
-  const levelCircles = Array.from({ length: levels }, (_, i) => {
-    const radius = (maxRadius / levels) * (i + 1);
-    return radius;
-  });
+  const levelCircles = Array.from({ length: levels }, (_, i) => (maxRadius / levels) * (i + 1));
 
   const axes = domains.map((domain, i) => {
     const angle = (Math.PI * 2 * i) / domains.length - Math.PI / 2;
     const endX = center + maxRadius * Math.cos(angle);
     const endY = center + maxRadius * Math.sin(angle);
-    const labelX = center + (maxRadius + 35) * Math.cos(angle);
-    const labelY = center + (maxRadius + 35) * Math.sin(angle);
-    
+    const labelRadius = maxRadius + 18;
+    const labelX = center + labelRadius * Math.cos(angle);
+    const labelY = center + labelRadius * Math.sin(angle);
+
     return { endX, endY, labelX, labelY, label: labels[i] };
   });
 
   return (
     <div className="flex items-center justify-center">
-      <svg width={size} height={size} className="overflow-visible">
+      <svg
+        viewBox={`0 0 ${size} ${size}`}
+        className="w-full max-w-sm md:max-w-md"
+        role="img"
+        aria-label="Performance radar chart"
+      >
         {levelCircles.map((radius, i) => (
           <circle
             key={i}
@@ -188,7 +196,7 @@ const SpiderChart = ({ data, darkMode }) => {
 
         <path
           d={polygonPath}
-          fill="rgba(59, 130, 246, 0.2)"
+          fill="rgba(59, 130, 246, 0.18)"
           stroke="#3b82f6"
           strokeWidth="2"
         />
@@ -200,23 +208,31 @@ const SpiderChart = ({ data, darkMode }) => {
             cy={point.y}
             r="4"
             fill="#3b82f6"
-            stroke="white"
+            stroke={darkMode ? '#0b1120' : '#ffffff'}
             strokeWidth="2"
           />
         ))}
 
-        {axes.map((axis, i) => (
-          <text
-            key={i}
-            x={axis.labelX}
-            y={axis.labelY}
-            textAnchor="middle"
-            dominantBaseline="middle"
-            className={`text-sm font-medium ${darkMode ? 'fill-gray-300' : 'fill-gray-700'}`}
-          >
-            {axis.label}
-          </text>
-        ))}
+        {axes.map((axis, i) => {
+          const words = axis.label.split(' ');
+          const offset = ((words.length - 1) * 11) / 2;
+          return (
+            <g key={i} transform={`translate(${axis.labelX}, ${axis.labelY})`}>
+              {words.map((word, index) => (
+                <text
+                  key={index}
+                  y={index * 11 - offset}
+                  textAnchor="middle"
+                  fontSize="11"
+                  fontWeight="600"
+                  fill={darkMode ? '#d1d5db' : '#1f2937'}
+                >
+                  {word}
+                </text>
+              ))}
+            </g>
+          );
+        })}
       </svg>
     </div>
   );
@@ -869,3 +885,4 @@ const App = () => {
 };
 
 export default App;
+

@@ -22,8 +22,8 @@ const Onboarding = ({ onComplete }) => {
 
   const steps = [
     {
-      title: 'Welcome to STARK',
-      description: 'Let\'s set up your fitness profile for personalized insights',
+      title: 'Orientation',
+      description: '',
       component: 'welcome'
     },
     {
@@ -67,6 +67,10 @@ const Onboarding = ({ onComplete }) => {
       component: 'complete'
     }
   ];
+
+  const currentStepMeta = steps[currentStep];
+  const showStepTitle = currentStep !== 0 && Boolean(currentStepMeta.title);
+  const showStepDescription = Boolean(currentStepMeta.description);
 
   const updateField = (field, value) => {
     setUserData(prev => ({ ...prev, [field]: parseFloat(value) || value }));
@@ -122,6 +126,9 @@ const Onboarding = ({ onComplete }) => {
             
             {/* Hero Text */}
             <div className="space-y-6 mb-8 animate-fade-in-up">
+              <h2 className="text-4xl font-bold text-gray-900 dark:text-white tracking-tight">
+                Welcome to STARK
+              </h2>
               <div className="space-y-2">
                 <p className="text-xl font-medium text-blue-600 dark:text-blue-400">
                   Optimize Human Performance.
@@ -130,13 +137,6 @@ const Onboarding = ({ onComplete }) => {
                   Measure. Adapt. Evolve.
                 </p>
               </div>
-              <img
-                src={starkPersonHealth}
-                alt="Human performance visualization"
-                className="w-36 h-36 sm:w-40 sm:h-40 mx-auto drop-shadow-lg select-none pointer-events-none"
-                decoding="async"
-                draggable="false"
-              />
             </div>
 
             {/* Subtitle */}
@@ -147,7 +147,7 @@ const Onboarding = ({ onComplete }) => {
             {/* Info Card */}
             <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg p-6 border border-blue-100 dark:border-blue-800/30">
               <p className="text-sm text-blue-800 dark:text-blue-200">
-                ⚡ Takes ~5 minutes • All metrics can be updated anytime
+                Quick setup (~5 minutes) | Metrics can be updated anytime
               </p>
             </div>
 
@@ -156,67 +156,89 @@ const Onboarding = ({ onComplete }) => {
 
       case 'basic':
         return (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Age
-                </label>
-                <input
-                  type="number"
-                  value={userData.age}
-                  onChange={(e) => updateField('age', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  min="18"
-                  max="100"
-                />
+          <div className="grid gap-8 md:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] items-start">
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Age
+                  </label>
+                  <input
+                    type="number"
+                    value={userData.age}
+                    onChange={(e) => updateField('age', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    min="18"
+                    max="100"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Gender
+                  </label>
+                  <select
+                    value={userData.gender}
+                    onChange={(e) => setUserData(prev => ({ ...prev, gender: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  >
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    VO2 Max (mL/kg/min)
+                  </label>
+                  <input
+                    type="number"
+                    value={userData.vo2max}
+                    onChange={(e) => updateField('vo2max', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    min="20"
+                    max="80"
+                    step="0.1"
+                  />
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Estimate: 15-20 for poor, 35-40 for good, 45+ for excellent
+                  </p>
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Gender
+                  Measurement System
                 </label>
                 <select
-                  value={userData.gender}
-                  onChange={(e) => setUserData(prev => ({ ...prev, gender: e.target.value }))}
+                  value={userData.measurementSystem || 'metric'}
+                  onChange={(e) => setUserData(prev => ({ ...prev, measurementSystem: e.target.value }))}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 >
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
+                  <option value="metric">Metric (kg, cm, km)</option>
+                  <option value="imperial">Imperial (lbs, ft, miles)</option>
                 </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  VO₂ Max (mL/kg/min)
-                </label>
-                <input
-                  type="number"
-                  value={userData.vo2max}
-                  onChange={(e) => updateField('vo2max', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  min="20"
-                  max="80"
-                  step="0.1"
-                />
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  Estimate: 15-20 for poor, 35-40 for good, 45+ for excellent
+                  Choose your preferred unit system. You can change this later in settings.
                 </p>
               </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Measurement System
-              </label>
-              <select
-                value={userData.measurementSystem || 'metric'}
-                onChange={(e) => setUserData(prev => ({ ...prev, measurementSystem: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              >
-                <option value="metric">Metric (kg, cm, km)</option>
-                <option value="imperial">Imperial (lbs, ft, miles)</option>
-              </select>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                Choose your preferred unit system. You can change this later in settings.
-              </p>
+            <div className="hidden md:flex items-center justify-center">
+              <div className="relative w-full max-w-xs">
+                <img
+                  src={starkPersonHealth}
+                  alt="Performance visualization"
+                  className="w-full h-auto drop-shadow-2xl select-none pointer-events-none"
+                  decoding="async"
+                  draggable="false"
+                />
+              </div>
+            </div>
+            <div className="md:hidden flex justify-center">
+              <img
+                src={starkPersonHealth}
+                alt="Performance visualization"
+                className="w-32 h-32 mt-4 drop-shadow-2xl select-none pointer-events-none"
+                decoding="async"
+                draggable="false"
+              />
             </div>
           </div>
         );
@@ -560,7 +582,7 @@ const Onboarding = ({ onComplete }) => {
         <div className="onboarding-emblem" aria-hidden="true"></div>
       </div>
 
-      <div className="max-w-2xl w-full bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-2xl shadow-2xl relative z-10">
+      <div className="max-w-3xl w-full bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-2xl shadow-2xl relative z-10">
         {/* Progress Bar */}
         <div className="px-6 pt-6">
           <div className="flex items-center justify-between mb-4">
@@ -581,14 +603,20 @@ const Onboarding = ({ onComplete }) => {
 
         {/* Content */}
         <div className="px-6 py-8">
-          <div className="mb-6">
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-              {steps[currentStep].title}
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400">
-              {steps[currentStep].description}
-            </p>
-          </div>
+          {(showStepTitle || showStepDescription) && (
+            <div className="mb-6">
+              {showStepTitle && (
+                <h1 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                  {currentStepMeta.title}
+                </h1>
+              )}
+              {showStepDescription && (
+                <p className="text-gray-600 dark:text-gray-400">
+                  {currentStepMeta.description}
+                </p>
+              )}
+            </div>
+          )}
 
           {renderStepContent()}
         </div>
@@ -628,3 +656,5 @@ const Onboarding = ({ onComplete }) => {
 };
 
 export default Onboarding;
+
+
