@@ -1,7 +1,7 @@
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import { Moon, Sun, Download, Activity, Zap, Battery, Droplet, Heart, TrendingUp } from 'lucide-react';
 import normativeDataRaw from './data/exercise_metrics.json' assert { type: 'json' };
-import { buildNormativeData } from './utils/norms';
+import { calculateZScore, zScoreToPercentile, getPerformanceLabel, calculateFitnessIndex, calculateFitnessAge, calculateUserResults, getDomainConfig, exportUserData } from './utils/calculations';
 import { saveUserData, loadUserData, saveAppState, loadAppState, exportAllData } from './utils/storage';
 import Onboarding from './components/Onboarding';
 
@@ -115,60 +115,6 @@ const DataProvider = ({ children }) => {
       {children}
     </DataContext.Provider>
   );
-};
-
-// ==================== DATA & SCORING ====================
-const normativeData = buildNormativeData(normativeDataRaw);
-
-const calculateZScore = (value, mean, std) => {
-  return (value - mean) / std;
-};
-
-const zScoreToPercentile = (z) => {
-  const t = 1 / (1 + 0.2316419 * Math.abs(z));
-  const d = 0.3989423 * Math.exp(-z * z / 2);
-  const p = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
-  return z > 0 ? (1 - p) * 100 : p * 100;
-};
-
-const getPerformanceLabel = (percentile) => {
-  if (percentile >= 85) return { label: 'Excellent', color: 'text-green-600 dark:text-green-400' };
-  if (percentile >= 70) return { label: 'Good', color: 'text-blue-600 dark:text-blue-400' };
-  if (percentile >= 40) return { label: 'Average', color: 'text-gray-600 dark:text-gray-400' };
-  if (percentile >= 25) return { label: 'Fair', color: 'text-orange-600 dark:text-orange-400' };
-  return { label: 'Needs Work', color: 'text-red-600 dark:text-red-400' };
-};
-
-const calculateFitnessIndex = (domainScores) => {
-  let totalScore = 0;
-  Object.entries(normativeData.domains).forEach(([domain, config]) => {
-    const score = domainScores[domain] || 50;
-    totalScore += score * config.weight;
-  });
-  return Math.round(totalScore);
-};
-
-const calculateFitnessAge = (age, vo2max, gender) => {
-  const norms = normativeData.vo2maxNorms[gender];
-
-  if (!norms || norms.length === 0) {
-    return age;
-  }
-
-  for (let i = 0; i < norms.length; i++) {
-    const group = norms[i];
-    if (group.mean === undefined) {
-      continue;
-    }
-
-    if (vo2max >= group.mean) {
-      return group.minAge ?? age;
-    }
-  }
-
-  const lastGroup = norms[norms.length - 1];
-  const fallbackAge = lastGroup.maxAge ?? lastGroup.minAge ?? age;
-  return fallbackAge + 5;
 };
 
 // ==================== COMPONENTS ====================
@@ -317,48 +263,15 @@ const FitnessModule = () => {
   const [results, setResults] = useState(null);
 
   useEffect(() => {
-    calculateResults();
+    const results = calculateUserResults(userData);
+    setResults(results);
   }, [userData]);
-
-  const calculateResults = () => {
-    const domainScores = {};
-    const domainPercentiles = {};
-    const domainZScores = {};
-
-    Object.entries(normativeData.domains).forEach(([domain, config]) => {
-      const value = userData[domain];
-      const z = calculateZScore(value, config.mean, config.std);
-      const percentile = zScoreToPercentile(z);
-      
-      domainScores[domain] = value;
-      domainPercentiles[domain] = percentile;
-      domainZScores[domain] = z;
-    });
-
-    const fitnessIndex = calculateFitnessIndex(domainScores);
-    const fitnessAge = calculateFitnessAge(userData.age, userData.vo2max, userData.gender);
-
-    setResults({
-      fitnessIndex,
-      fitnessAge,
-      vo2max: userData.vo2max,
-      domains: domainPercentiles,
-      zScores: domainZScores
-    });
-  };
 
   const updateField = (field, value) => {
     setUserData(prev => ({ ...prev, [field]: parseFloat(value) || 0 }));
   };
 
-  const domainConfig = [
-    { key: 'strength', icon: Activity },
-    { key: 'endurance', icon: Heart },
-    { key: 'power', icon: Zap },
-    { key: 'mobility', icon: TrendingUp },
-    { key: 'bodyComp', icon: Droplet },
-    { key: 'recovery', icon: Battery }
-  ];
+  const domainConfig = getDomainConfig();
 
   return (
     <>
