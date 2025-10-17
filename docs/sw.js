@@ -1,9 +1,9 @@
 const CACHE_NAME = 'stark-fitness-v1';
 const STATIC_CACHE_URLS = [
-  '/',
-  '/manifest.json',
-  '/icons/icon-192x192.svg',
-  '/icons/icon-512x512.svg'
+  './',
+  './manifest.json',
+  './icons/icon-192x192.svg',
+  './icons/icon-512x512.svg'
 ];
 
 // Install event - cache static assets
@@ -44,8 +44,12 @@ self.addEventListener('activate', (event) => {
 
 // Fetch event - serve from cache when offline
 self.addEventListener('fetch', (event) => {
-  // Only handle GET requests
-  if (event.request.method !== 'GET') return;
+  // Only handle GET requests for http/https schemes
+  if (event.request.method !== 'GET' || 
+      !event.request.url.startsWith('http://') && 
+      !event.request.url.startsWith('https://')) {
+    return;
+  }
 
   event.respondWith(
     caches.match(event.request)
