@@ -84,12 +84,37 @@ export const calculateUserResults = (userData) => {
   const domainPercentiles = {};
   const domainZScores = {};
 
+  // Calculate domain scores from logged exercises
   Object.entries(normativeData.domains).forEach(([domain, config]) => {
-    const value = userData[domain];
-    const z = calculateZScore(value, config.mean, config.std);
+    const exercises = normativeData.exerciseMetrics[domain] || [];
+    const loggedValues = [];
+
+    // Collect percentiles for logged exercises in this domain
+    exercises.forEach(exercise => {
+      const loggedValue = userData.loggedExercises[exercise.id];
+      if (loggedValue !== undefined && loggedValue !== null) {
+        // Calculate percentile based on min-max range
+        const min = exercise.min || 0;
+        const max = exercise.max || 100;
+        const percentile = Math.max(0, Math.min(100, ((loggedValue - min) / (max - min)) * 100));
+        loggedValues.push(percentile);
+      }
+    });
+
+    // Calculate average percentile for the domain
+    let domainScore;
+    if (loggedValues.length > 0) {
+      domainScore = loggedValues.reduce((sum, val) => sum + val, 0) / loggedValues.length;
+    } else {
+      // Default to 50 if no exercises logged
+      domainScore = 50;
+    }
+
+    // Calculate z-score for the domain score
+    const z = calculateZScore(domainScore, config.mean, config.std);
     const percentile = zScoreToPercentile(z);
 
-    domainScores[domain] = value;
+    domainScores[domain] = domainScore;
     domainPercentiles[domain] = percentile;
     domainZScores[domain] = z;
   });
