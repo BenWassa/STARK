@@ -66,7 +66,7 @@ const ThemeProvider = ({ children }) => {
   );
 };
 
-const DataProvider = ({ children, isDevMode }) => {
+const DataProvider = ({ children, isDevMode, runOnboarding, clearAllAppData }) => {
   const [userData, setUserData] = useState({
     age: 26,
     gender: 'male',
@@ -117,7 +117,7 @@ const DataProvider = ({ children, isDevMode }) => {
   }, [userData, isLoading]);
 
   return (
-    <DataContext.Provider value={{ userData, setUserData, isLoading, isDevMode }}>
+    <DataContext.Provider value={{ userData, setUserData, isLoading, isDevMode, runOnboarding, clearAllAppData }}>
       {children}
     </DataContext.Provider>
   );
@@ -628,7 +628,7 @@ const App = () => {
   if (!onboardingComplete && !isDevMode) {
     return (
       <ThemeProvider>
-        <DataProvider isDevMode={isDevMode}>
+  <DataProvider isDevMode={isDevMode} runOnboarding={runOnboarding} clearAllAppData={clearAllAppData}>
           <Onboarding onComplete={handleOnboardingComplete} />
         </DataProvider>
       </ThemeProvider>
@@ -638,7 +638,7 @@ const App = () => {
   if (showOnboarding) {
     return (
       <ThemeProvider>
-        <DataProvider isDevMode={isDevMode}>
+  <DataProvider isDevMode={isDevMode} runOnboarding={runOnboarding} clearAllAppData={clearAllAppData}>
           <Onboarding onComplete={() => {
             setShowOnboarding(false);
             handleOnboardingComplete();
@@ -650,7 +650,7 @@ const App = () => {
 
   return (
     <ThemeProvider>
-      <DataProvider isDevMode={isDevMode}>
+  <DataProvider isDevMode={isDevMode} runOnboarding={runOnboarding} clearAllAppData={clearAllAppData}>
         <Shell>
           <FitnessModule />
         </Shell>
