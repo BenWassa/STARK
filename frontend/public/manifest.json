@@ -42,7 +42,22 @@
       "src": "./screenshots/mobile-412x915.png",
       "sizes": "412x915",
       "type": "image/png",
-      "form_factor": "narrow"
+      "form_factor": "narrow",
+      "label": "STARK Fitness Dashboard on Pixel 8"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Quick Assessment",
+      "short_name": "Assess",
+      "description": "Run a quick fitness assessment",
+      "url": "./?action=assess",
+      "icons": [
+        {
+          "src": "./icons/icon-192x192.svg",
+          "sizes": "192x192"
+        }
+      ]
     }
   ]
 }
