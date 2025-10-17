@@ -4,59 +4,366 @@
 
 /* ==================== ONBOARDING BACKGROUNDS ==================== */
 
-/* Light Mode: Soft gradient with geometric particles */
+/* Light Mode: Professional gradient with subtle data visualization aesthetics */
 .onboarding-bg {
-  background: linear-gradient(135deg, #F8FAFC 0%, #E6EFFA 100%);
+  position: relative;
+  background:
+    radial-gradient(circle at 18% -10%, rgba(59, 130, 246, 0.2) 0%, rgba(59, 130, 246, 0) 55%),
+    radial-gradient(circle at 80% 18%, rgba(14, 165, 233, 0.14) 0%, rgba(14, 165, 233, 0) 60%),
+    linear-gradient(135deg, #f8fafc 0%, #eef2ff 50%, #e0f2fe 100%);
+}
+
+.onboarding-bg::before,
+.onboarding-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+
+.onboarding-bg::before {
+  background:
+    radial-gradient(ellipse at 15% 30%, rgba(59, 130, 246, 0.3) 0%, transparent 65%),
+    radial-gradient(ellipse at 85% 55%, rgba(14, 165, 233, 0.2) 0%, transparent 70%);
+  mix-blend-mode: screen;
+  opacity: 0.4;
+  animation: background-pan 28s linear infinite;
+}
+
+.onboarding-bg::after {
+  background:
+    linear-gradient(120deg, rgba(59, 130, 246, 0.08) 0%, rgba(14, 165, 233, 0.04) 45%, rgba(59, 130, 246, 0.1) 100%);
+  mix-blend-mode: soft-light;
+  opacity: 0.45;
 }
 
 .dark .onboarding-bg {
-  background: linear-gradient(135deg, #0D1117 0%, #1C1F26 100%);
+  position: relative;
+  background:
+    radial-gradient(circle at 20% -15%, rgba(14, 165, 233, 0.35) 0%, rgba(14, 165, 233, 0) 60%),
+    radial-gradient(circle at 85% 10%, rgba(37, 99, 235, 0.25) 0%, rgba(37, 99, 235, 0) 65%),
+    linear-gradient(140deg, #05070c 0%, #0f172a 45%, #111827 100%);
 }
 
-/* Particle Grid (Light Mode) */
-.particle-grid {
-  position: absolute;
-  inset: 0;
-  background-image: 
-    radial-gradient(circle at 20% 30%, rgba(59, 130, 246, 0.03) 0%, transparent 50%),
-    radial-gradient(circle at 80% 70%, rgba(147, 197, 253, 0.04) 0%, transparent 50%),
-    repeating-linear-gradient(45deg, transparent, transparent 40px, rgba(255, 255, 255, 0.02) 40px, rgba(255, 255, 255, 0.02) 80px);
-  animation: float 20s ease-in-out infinite;
+.dark .onboarding-bg::before {
+  background:
+    radial-gradient(ellipse at 18% 35%, rgba(14, 165, 233, 0.45) 0%, transparent 70%),
+    radial-gradient(ellipse at 82% 65%, rgba(59, 130, 246, 0.32) 0%, transparent 75%);
+  opacity: 0.55;
 }
 
-/* Abstract Human Silhouette (Light Mode) */
+.dark .onboarding-bg::after {
+  background:
+    linear-gradient(125deg, rgba(14, 116, 144, 0.35) 0%, rgba(59, 130, 246, 0.18) 50%, rgba(14, 165, 233, 0.32) 100%);
+  opacity: 0.4;
+  mix-blend-mode: screen;
+}
+
 .human-silhouette {
   position: absolute;
-  right: -10%;
-  bottom: -5%;
-  width: 400px;
-  height: 600px;
-  background: radial-gradient(ellipse at center, rgba(59, 130, 246, 0.02) 0%, transparent 70%);
-  clip-path: ellipse(45% 50% at 50% 50%);
-  animation: breathe 8s ease-in-out infinite;
+  bottom: -25%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(700px, 82vw);
+  height: 140%;
+  background:
+    radial-gradient(circle at 50% 26%, rgba(59, 130, 246, 0.22) 0%, transparent 58%),
+    radial-gradient(circle at 44% 60%, rgba(14, 165, 233, 0.16) 0%, transparent 65%),
+    radial-gradient(circle at 58% 68%, rgba(20, 184, 166, 0.12) 0%, transparent 60%);
+  filter: blur(65px);
+  opacity: 0.5;
+  mix-blend-mode: screen;
+  animation: silhouette-glow 18s ease-in-out infinite;
 }
 
-/* Energy Lines (Dark Mode) */
+.human-silhouette::after {
+  content: '';
+  position: absolute;
+  inset: 18% 38% 12%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.35) 0%, rgba(59, 130, 246, 0.0) 80%);
+  filter: blur(45px);
+  opacity: 0.6;
+}
+
+.dark .human-silhouette {
+  opacity: 0.68;
+  filter: blur(55px);
+}
+
 .energy-lines {
   position: absolute;
-  inset: 0;
-  background-image: 
-    linear-gradient(90deg, transparent 0%, rgba(34, 211, 238, 0.03) 50%, transparent 100%),
-    linear-gradient(0deg, transparent 0%, rgba(59, 130, 246, 0.02) 50%, transparent 100%);
-  background-size: 200px 200px, 150px 150px;
-  animation: pulse-lines 15s linear infinite;
+  inset: -20% -10%;
+  background-image:
+    repeating-linear-gradient(115deg, rgba(14, 165, 233, 0) 0px, rgba(14, 165, 233, 0) 120px, rgba(14, 165, 233, 0.22) 120px, rgba(14, 165, 233, 0.22) 136px),
+    repeating-linear-gradient(65deg, rgba(59, 130, 246, 0) 0px, rgba(59, 130, 246, 0) 160px, rgba(59, 130, 246, 0.18) 160px, rgba(59, 130, 246, 0.18) 182px);
+  background-size: 420px 420px, 360px 360px;
+  mix-blend-mode: screen;
+  opacity: 0.24;
+  animation: energy-trace 22s linear infinite;
 }
 
-/* Glowing Dots (Dark Mode) */
+.energy-lines::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(14, 165, 233, 0) 20%, rgba(14, 165, 233, 0.22) 50%, rgba(14, 165, 233, 0) 80%);
+  opacity: 0.55;
+  animation: energy-pulse 12s ease-in-out infinite;
+}
+
+.dark .energy-lines {
+  opacity: 0.42;
+}
+
 .glowing-dots {
   position: absolute;
   inset: 0;
-  background-image: 
-    radial-gradient(circle at 15% 25%, rgba(34, 211, 238, 0.1) 0%, transparent 2%),
-    radial-gradient(circle at 85% 75%, rgba(59, 130, 246, 0.08) 0%, transparent 2%),
-    radial-gradient(circle at 50% 50%, rgba(34, 211, 238, 0.06) 0%, transparent 2%),
-    radial-gradient(circle at 70% 30%, rgba(147, 197, 253, 0.05) 0%, transparent 2%);
-  animation: glow-pulse 4s ease-in-out infinite;
+  background-image:
+    radial-gradient(circle, rgba(14, 165, 233, 0.32) 0%, transparent 55%),
+    radial-gradient(circle, rgba(59, 130, 246, 0.28) 0%, transparent 60%),
+    radial-gradient(circle, rgba(20, 184, 166, 0.18) 0%, transparent 58%);
+  background-size: 140px 140px, 200px 200px, 280px 280px;
+  mix-blend-mode: screen;
+  opacity: 0.28;
+  animation: dot-twinkle 10s ease-in-out infinite;
+}
+
+.dark .glowing-dots {
+  opacity: 0.48;
+}
+
+/* Professional Geometric Grid Pattern */
+.particle-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    /* Primary grid lines */
+    linear-gradient(rgba(59, 130, 246, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59, 130, 246, 0.08) 1px, transparent 1px),
+    /* Secondary accent lines */
+    linear-gradient(rgba(147, 197, 253, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(147, 197, 253, 0.04) 1px, transparent 1px);
+  background-size: 60px 60px, 60px 60px, 240px 240px, 240px 240px;
+  background-position: 0 0, 0 0, 30px 30px, 30px 30px;
+  animation: grid-shift 40s linear infinite;
+}
+
+/* Data Flow Lines (Light Mode) */
+.data-flow-light {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(45deg, transparent 30%, rgba(59, 130, 246, 0.06) 50%, transparent 70%),
+    linear-gradient(-45deg, transparent 30%, rgba(147, 197, 253, 0.04) 50%, transparent 70%);
+  background-size: 200px 200px;
+  animation: data-flow 25s ease-in-out infinite;
+}
+
+/* Abstract Performance Metrics Visualization */
+.performance-metrics-bg {
+  position: absolute;
+  top: 20%;
+  left: 10%;
+  width: 300px;
+  height: 200px;
+  background:
+    radial-gradient(circle at 20% 30%, rgba(59, 130, 246, 0.08) 0%, transparent 40%),
+    radial-gradient(circle at 80% 70%, rgba(34, 211, 238, 0.06) 0%, transparent 40%),
+    radial-gradient(circle at 50% 50%, rgba(147, 197, 253, 0.04) 0%, transparent 40%);
+  border-radius: 50% 30% 70% 20% / 30% 70% 20% 50%;
+  animation: morph 20s ease-in-out infinite;
+  opacity: 0.3;
+}
+
+/* Energy Matrix (Dark Mode) */
+.energy-matrix {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(45deg, transparent 0%, rgba(34, 211, 238, 0.03) 25%, transparent 50%, rgba(59, 130, 246, 0.02) 75%, transparent 100%),
+    linear-gradient(-45deg, transparent 0%, rgba(147, 197, 253, 0.02) 25%, transparent 50%, rgba(34, 211, 238, 0.03) 75%, transparent 100%);
+  background-size: 150px 150px;
+  animation: matrix-flow 30s linear infinite;
+}
+
+/* Neural Network Nodes (Dark Mode) */
+.neural-nodes {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 15% 25%, rgba(34, 211, 238, 0.12) 0%, transparent 3%),
+    radial-gradient(circle at 85% 75%, rgba(59, 130, 246, 0.1) 0%, transparent 3%),
+    radial-gradient(circle at 50% 50%, rgba(147, 197, 253, 0.08) 0%, transparent 3%),
+    radial-gradient(circle at 70% 30%, rgba(34, 211, 238, 0.06) 0%, transparent 3%),
+    radial-gradient(circle at 25% 80%, rgba(59, 130, 246, 0.07) 0%, transparent 3%);
+  animation: neural-pulse 6s ease-in-out infinite;
+}
+
+/* Performance Rings */
+.performance-rings {
+  position: absolute;
+  top: 60%;
+  right: 15%;
+  width: 250px;
+  height: 250px;
+}
+
+.performance-rings::before,
+.performance-rings::after {
+  content: '';
+  position: absolute;
+  border: 1px solid rgba(59, 130, 246, 0.15);
+  border-radius: 50%;
+  animation: ring-expand 8s ease-in-out infinite;
+}
+
+.performance-rings::before {
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  animation-delay: 0s;
+}
+
+.performance-rings::after {
+  width: 60%;
+  height: 60%;
+  top: 20%;
+  left: 20%;
+  animation-delay: 2s;
+}
+
+/* ==================== ENHANCED ONBOARDING ANIMATIONS ==================== */
+
+@keyframes grid-shift {
+  0% {
+    transform: translate(0, 0);
+  }
+  100% {
+    transform: translate(60px, 60px);
+  }
+}
+
+@keyframes data-flow {
+  0%, 100% {
+    transform: translate(0, 0) rotate(0deg);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translate(50px, -30px) rotate(2deg);
+    opacity: 0.6;
+  }
+}
+
+@keyframes background-pan {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(3%, -2%, 0);
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes silhouette-glow {
+  0%, 100% {
+    transform: translateX(-50%) scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translateX(-50%) scale(1.05);
+    opacity: 0.68;
+  }
+}
+
+@keyframes energy-trace {
+  0% {
+    background-position: 0 0, 0 0;
+  }
+  50% {
+    background-position: 140px -100px, -180px 120px;
+  }
+  100% {
+    background-position: 0 0, 0 0;
+  }
+}
+
+@keyframes energy-pulse {
+  0%, 100% {
+    transform: translateX(-8%);
+    opacity: 0.4;
+  }
+  50% {
+    transform: translateX(8%);
+    opacity: 0.7;
+  }
+}
+
+@keyframes dot-twinkle {
+  0%, 100% {
+    background-position: 0 0, 60px 60px, 120px 120px;
+    opacity: 0.28;
+  }
+  50% {
+    background-position: 45px -35px, -90px 35px, 110px -70px;
+    opacity: 0.45;
+  }
+}
+
+@keyframes morph {
+  0%, 100% {
+    border-radius: 50% 30% 70% 20% / 30% 70% 20% 50%;
+    transform: scale(1);
+  }
+  25% {
+    border-radius: 70% 50% 30% 60% / 60% 30% 70% 40%;
+    transform: scale(1.05);
+  }
+  50% {
+    border-radius: 30% 70% 40% 80% / 80% 40% 60% 20%;
+    transform: scale(0.95);
+  }
+  75% {
+    border-radius: 60% 40% 80% 20% / 20% 80% 40% 60%;
+    transform: scale(1.02);
+  }
+}
+
+@keyframes matrix-flow {
+  0% {
+    transform: translate(0, 0);
+  }
+  100% {
+    transform: translate(150px, 150px);
+  }
+}
+
+@keyframes neural-pulse {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.1);
+  }
+}
+
+@keyframes ring-expand {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 0.4;
+  }
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
 }
 
 /* ==================== ONBOARDING ANIMATIONS ==================== */

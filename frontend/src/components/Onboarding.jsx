@@ -536,16 +536,16 @@ const Onboarding = ({ onComplete }) => {
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {/* Geometric Particles Grid */}
-        <div className="particle-grid"></div>
+        <div className="particle-grid" aria-hidden="true"></div>
         
-        {/* Abstract Human Silhouette (Light Mode) */}
-        <div className="human-silhouette dark:opacity-0"></div>
+        {/* Abstract Human Silhouette */}
+        <div className="human-silhouette" aria-hidden="true"></div>
         
-        {/* Energy Lines (Dark Mode) */}
-        <div className="energy-lines opacity-0 dark:opacity-100"></div>
+        {/* Energy Lines */}
+        <div className="energy-lines" aria-hidden="true"></div>
         
         {/* Glowing Dots */}
-        <div className="glowing-dots opacity-0 dark:opacity-100"></div>
+        <div className="glowing-dots" aria-hidden="true"></div>
       </div>
 
       <div className="max-w-2xl w-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-lg shadow-2xl relative z-10">
