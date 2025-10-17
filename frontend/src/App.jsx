@@ -3,6 +3,7 @@ import { Moon, Sun, Download, Activity, Zap, Battery, Droplet, Heart, TrendingUp
 import normativeDataRaw from './data/exercise_metrics.json' assert { type: 'json' };
 import { calculateZScore, zScoreToPercentile, getPerformanceLabel, calculateFitnessIndex, calculateFitnessAge, calculateUserResults, getDomainConfig, exportUserData } from './utils/calculations';
 import { saveUserData, loadUserData, saveAppState, loadAppState, exportAllData } from './utils/storage';
+import packageJson from '../package.json' assert { type: 'json' };
 import Onboarding from './components/Onboarding';
 
 // ==================== CONTEXTS ====================
@@ -458,7 +459,7 @@ const Shell = ({ children }) => {
       </main>
 
       <footer className="text-xs text-gray-500 dark:text-gray-400 text-center py-4 border-t border-gray-200 dark:border-gray-800">
-        STARK Analytics Engine © 2025 • All calculations performed locally using normative dataset v{normativeData.version}
+        STARK Analytics Engine v{packageJson.version} © 2025 • All calculations performed locally using normative dataset v{normativeData.version}
       </footer>
     </div>
   );
