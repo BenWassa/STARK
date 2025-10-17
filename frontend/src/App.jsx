@@ -558,7 +558,7 @@ const DomainMetricsModal = ({ domainKey, measurementSystem, userData, onClose, o
 };
 
 // ==================== FITNESS MODULE ====================
-const FitnessModule = () => {
+const FitnessModule = ({ updateAvailable, onUpdateClick, onDismissUpdate }) => {
   const { darkMode } = useContext(ThemeContext);
   const { userData, setUserData } = useContext(DataContext);
   const [results, setResults] = useState(null);
@@ -943,6 +943,13 @@ const Shell = ({ children }) => {
         </div>
       </header>
 
+      {updateAvailable && (
+        <UpdateBanner
+          onUpdate={onUpdateClick}
+          onDismiss={onDismissUpdate}
+        />
+      )}
+
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {children}
       </main>
@@ -1227,13 +1234,11 @@ const App = () => {
   return (
     <ThemeProvider>
       <DataProvider isDevMode={isDevMode} runOnboarding={runOnboarding} clearAllAppData={clearAllAppData} loadMockData={loadMockData} toggleMeasurementSystem={toggleMeasurementSystem}>
-        {updateAvailable && (
-          <UpdateBanner
-            onUpdate={handleUpdateClick}
-            onDismiss={handleDismissUpdate}
-          />
-        )}
-        <FitnessModule />
+        <FitnessModule 
+          updateAvailable={updateAvailable}
+          onUpdateClick={handleUpdateClick}
+          onDismissUpdate={handleDismissUpdate}
+        />
       </DataProvider>
     </ThemeProvider>
   );
