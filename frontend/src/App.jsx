@@ -1,5 +1,5 @@
 import React, { useState, useEffect, createContext, useContext, useRef } from 'react';
-import { Moon, Sun, Download, Activity, Zap, Battery, Droplet, Heart, TrendingUp, Trash2, Ruler, Play, Database, Upload, X, Info } from 'lucide-react';
+import { Moon, Sun, Download, Activity, Zap, Battery, Droplet, Heart, TrendingUp, Trash2, Ruler, Play, Database, Upload, X, Info, Menu } from 'lucide-react';
 import normativeDataRaw from './data/exercise_metrics.json' assert { type: 'json' };
 import { buildNormativeData } from './utils/norms';
 
@@ -497,6 +497,18 @@ const Shell = ({ children }) => {
     };
   }, [isSideNavOpen]);
 
+  useEffect(() => {
+    if (isSideNavOpen) {
+      const original = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = original;
+      };
+    }
+    document.body.style.overflow = '';
+    return undefined;
+  }, [isSideNavOpen]);
+
   const handleImportButtonClick = () => {
     importInputRef.current?.click();
   };
@@ -539,24 +551,27 @@ const Shell = ({ children }) => {
       <header className="border-b border-gray-200 dark:border-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
               <button
                 type="button"
                 onClick={() => setIsSideNavOpen(true)}
-                className="p-2 rounded-full border border-blue-100 dark:border-blue-900/40 bg-white/80 dark:bg-gray-900/60 shadow-sm hover:shadow-md transition"
+                className="p-2 rounded-full border border-blue-100 dark:border-blue-900/40 bg-white/80 dark:bg-gray-900/60 shadow-sm hover:shadow-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
                 aria-label="Open STARK navigation"
               >
-                <Activity className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                <Menu className="w-5 h-5 text-blue-600 dark:text-blue-400" />
               </button>
-              <div className="flex flex-col">
-                <h1 className="text-xl font-bold text-gray-900 dark:text-white">STARK</h1>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-500 dark:text-gray-400">Fitness Module</span>
-                  {isDevMode && (
-                    <span className="text-xs bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 px-2 py-0.5 rounded font-mono">
-                      DEV
-                    </span>
-                  )}
+              <div className="flex items-center gap-3">
+                <Activity className="w-7 h-7 text-blue-600 dark:text-blue-400" />
+                <div className="flex flex-col">
+                  <h1 className="text-xl font-bold text-gray-900 dark:text-white">STARK</h1>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-500 dark:text-gray-400">Fitness Module</span>
+                    {isDevMode && (
+                      <span className="text-xs bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 px-2 py-0.5 rounded font-mono">
+                        DEV
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -636,13 +651,7 @@ const Shell = ({ children }) => {
 
       {isSideNavOpen && (
         <div className="fixed inset-0 z-40 flex">
-          <button
-            type="button"
-            onClick={() => setIsSideNavOpen(false)}
-            className="flex-1 bg-gray-900/40 backdrop-blur-sm transition-opacity"
-            aria-label="Close navigation"
-          />
-          <aside className="relative w-80 sm:w-96 bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 shadow-2xl">
+          <aside className="relative w-80 sm:w-96 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 shadow-2xl transform transition-transform duration-200 ease-out">
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-gray-800">
               <div className="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-gray-100">
                 <Activity className="w-4 h-4 text-blue-500" />
@@ -727,6 +736,11 @@ const Shell = ({ children }) => {
               </section>
             </div>
           </aside>
+          <div
+            className="flex-1 bg-gray-900/40 backdrop-blur-sm transition-opacity"
+            onClick={() => setIsSideNavOpen(false)}
+            aria-hidden="true"
+          />
         </div>
       )}
     </div>

@@ -156,8 +156,8 @@ const Onboarding = ({ onComplete }) => {
 
       case 'basic':
         return (
-          <div className="grid gap-8 md:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] items-start">
-            <div className="space-y-6">
+          <div className="grid gap-8 md:grid-cols-5 items-start">
+            <div className="space-y-6 md:col-span-3">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -220,8 +220,8 @@ const Onboarding = ({ onComplete }) => {
                 </p>
               </div>
             </div>
-            <div className="hidden md:flex items-center justify-center">
-              <div className="relative w-full max-w-xs">
+            <div className="hidden md:flex items-center justify-center md:col-span-2">
+              <div className="relative w-full max-w-sm">
                 <img
                   src={starkPersonHealth}
                   alt="Performance visualization"
