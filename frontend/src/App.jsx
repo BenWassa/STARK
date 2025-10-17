@@ -503,7 +503,13 @@ const App = () => {
   }
 
   if (!onboardingComplete) {
-    return <Onboarding onComplete={handleOnboardingComplete} />;
+    return (
+      <ThemeProvider>
+        <DataProvider>
+          <Onboarding onComplete={handleOnboardingComplete} />
+        </DataProvider>
+      </ThemeProvider>
+    );
   }
 
   return (

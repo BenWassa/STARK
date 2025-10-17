@@ -1,9 +1,9 @@
 const CACHE_NAME = 'stark-fitness-v1';
 const STATIC_CACHE_URLS = [
-  '/',
-  '/manifest.json',
-  '/icons/icon-192x192.svg',
-  '/icons/icon-512x512.svg'
+  './',
+  './manifest.json',
+  './icons/icon-192x192.svg',
+  './icons/icon-512x512.svg'
 ];
 
 // Install event - cache static assets
