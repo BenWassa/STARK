@@ -205,44 +205,50 @@ const SpiderChart = ({ data, darkMode }) => {
 };
 
 const DomainCard = ({ domain, score, percentile, zScore, icon: Icon }) => {
-  const perfLabel = getPerformanceLabel(percentile);
-  
+  const { userData } = useContext(DataContext);
+  const exercises = exerciseMetricsData.exerciseMetrics[domain] || [];
+  const loggedCount = exercises.filter(ex => userData.loggedExercises[ex.id]).length;
+  const performance = getPerformanceLabel(percentile);
+
+  const domainLabels = {
+    strength: 'Strength',
+    endurance: 'Endurance',
+    power: 'Power',
+    mobility: 'Mobility',
+    bodyComp: 'Body Comp',
+    recovery: 'Recovery'
+  };
+
   return (
-    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 transition-opacity">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <Icon className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-          <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 capitalize">
-            {domain === 'bodyComp' ? 'Body Comp' : domain}
-          </h3>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-4 shadow-lg shadow-blue-500/10"
+    >
+      <div className="flex items-center gap-3 mb-3">
+        <div className={`p-2 rounded-lg ${performance.color.includes('green') ? 'bg-green-100 dark:bg-green-900/40' : performance.color.includes('blue') ? 'bg-blue-100 dark:bg-blue-900/40' : performance.color.includes('orange') ? 'bg-orange-100 dark:bg-orange-900/40' : 'bg-red-100 dark:bg-red-900/40'}`}>
+          <Icon className={`w-5 h-5 ${performance.color}`} />
         </div>
-        <span className="text-xl font-bold text-gray-900 dark:text-white">
-          {Math.round(percentile)}%
-        </span>
+        <div>
+          <h3 className="font-semibold text-gray-900 dark:text-white">{domainLabels[domain]}</h3>
+          <p className="text-sm text-gray-600 dark:text-gray-400">{performance.label}</p>
+        </div>
       </div>
-      
-      <div className="relative h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mb-2">
-        <div
-          className="absolute top-0 left-0 h-full bg-blue-500 transition-all duration-700"
-          style={{ width: `${percentile}%` }}
-        />
+      <div className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
+        {Math.round(percentile)}
       </div>
-      
-      <div className="flex items-center justify-between text-xs">
-        <span className="text-gray-600 dark:text-gray-400">
-          Score: {score}
-        </span>
-        <span className={perfLabel.color + ' font-medium'}>
-          {perfLabel.label}
-        </span>
+      <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+        {loggedCount} of {exercises.length} exercises logged
       </div>
-      
-      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+      <div className="text-xs text-gray-400 dark:text-gray-500">
         z = {zScore.toFixed(2)}
-      </p>
-    </div>
+      </div>
+    </motion.div>
   );
 };
+
+// ==================== COMPONENTS ====================
 
 // ==================== FITNESS MODULE ====================
 const FitnessModule = () => {
@@ -630,7 +636,7 @@ const FitnessModule = () => {
               <DomainCard
                 key={key}
                 domain={key}
-                score={userData[key]}
+                score={results.domains[key]}
                 percentile={results.domains[key]}
                 zScore={results.zScores[key]}
                 icon={icon}
