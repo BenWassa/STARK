@@ -1,8 +1,8 @@
 import React, { useState, useEffect, createContext, useContext } from 'react';
-import { Moon, Sun, Download, Activity, Zap, Battery, Droplet, Heart, TrendingUp } from 'lucide-react';
+import { Moon, Sun, Download, Activity, Zap, Battery, Droplet, Heart, TrendingUp, Trash2 } from 'lucide-react';
 import normativeDataRaw from './data/exercise_metrics.json' assert { type: 'json' };
 import { calculateZScore, zScoreToPercentile, getPerformanceLabel, calculateFitnessIndex, calculateFitnessAge, calculateUserResults, getDomainConfig, exportUserData } from './utils/calculations';
-import { saveUserData, loadUserData, saveAppState, loadAppState, exportAllData } from './utils/storage';
+import { saveUserData, loadUserData, saveAppState, loadAppState, exportAllData, clearAllData } from './utils/storage';
 import packageJson from '../package.json' assert { type: 'json' };
 import Onboarding from './components/Onboarding';
 
@@ -112,7 +112,7 @@ const DataProvider = ({ children }) => {
   }, [userData, isLoading]);
 
   return (
-    <DataContext.Provider value={{ userData, setUserData, isLoading }}>
+    <DataContext.Provider value={{ userData, setUserData, isLoading, isDevMode, clearAllAppData }}>
       {children}
     </DataContext.Provider>
   );
@@ -401,7 +401,7 @@ const FitnessModule = () => {
 // ==================== SHELL LAYOUT ====================
 const Shell = ({ children }) => {
   const { darkMode, setDarkMode } = useContext(ThemeContext);
-  const { userData } = useContext(DataContext);
+  const { userData, isDevMode, clearAllAppData } = useContext(DataContext);
 
   const exportData = async () => {
     try {
@@ -427,8 +427,17 @@ const Shell = ({ children }) => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Activity className="w-7 h-7 text-blue-600 dark:text-blue-400" />
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white">STARK</h1>
-              <span className="text-xs text-gray-500 dark:text-gray-400">Fitness Module</span>
+              <div className="flex flex-col">
+                <h1 className="text-xl font-bold text-gray-900 dark:text-white">STARK</h1>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-500 dark:text-gray-400">Fitness Module</span>
+                  {isDevMode && (
+                    <span className="text-xs bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 px-2 py-0.5 rounded font-mono">
+                      DEV
+                    </span>
+                  )}
+                </div>
+              </div>
             </div>
             <div className="flex items-center gap-3">
               <button
@@ -438,6 +447,15 @@ const Shell = ({ children }) => {
               >
                 <Download className="w-5 h-5 text-gray-600 dark:text-gray-300" />
               </button>
+              {isDevMode && (
+                <button
+                  onClick={clearAllAppData}
+                  className="p-2 rounded hover:bg-red-100 dark:hover:bg-red-900 transition-colors"
+                  title="🛠️ DEV: Clear All Data"
+                >
+                  <Trash2 className="w-5 h-5 text-red-600 dark:text-red-400" />
+                </button>
+              )}
               <button
                 onClick={() => setDarkMode(!darkMode)}
                 className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
@@ -469,6 +487,42 @@ const Shell = ({ children }) => {
 const App = () => {
   const [onboardingComplete, setOnboardingComplete] = useState(false);
   const [appLoading, setAppLoading] = useState(true);
+  const [isDevMode, setIsDevMode] = useState(false);
+
+  useEffect(() => {
+    // Check for dev mode (URL parameter or localStorage)
+    const urlParams = new URLSearchParams(window.location.search);
+    const devParam = urlParams.get('dev');
+    const devStorage = localStorage.getItem('starkDevMode');
+    
+    if (devParam === 'true' || devStorage === 'true') {
+      setIsDevMode(true);
+      localStorage.setItem('starkDevMode', 'true');
+      console.log('🛠️ STARK Dev Mode Enabled');
+    }
+  }, []);
+
+  const clearAllAppData = async () => {
+    if (window.confirm('⚠️ Clear ALL app data? This cannot be undone!\n\nThis will reset onboarding, user data, and all settings.')) {
+      try {
+        const success = await clearAllData();
+        if (success) {
+          // Clear localStorage as well
+          localStorage.clear();
+          // Reset app state
+          setOnboardingComplete(false);
+          setAppLoading(true);
+          // Reload the page to reset everything
+          window.location.reload();
+        } else {
+          alert('Failed to clear data. Check console for errors.');
+        }
+      } catch (error) {
+        console.error('Error clearing data:', error);
+        alert('Error clearing data. Check console for details.');
+      }
+    }
+  };
 
   useEffect(() => {
     // Check if onboarding is complete
