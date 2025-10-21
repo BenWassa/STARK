@@ -2,7 +2,7 @@ import React, { useState, useContext } from 'react';
 import { ChevronLeft, ChevronRight, Check, Heart, Zap, TrendingUp, Droplet, Battery } from 'lucide-react';
 import { DataContext } from '../App';
 import { saveAppState } from '../utils/storage';
-import { UNITS, getDisplayUnit, convertValueToDisplay, convertValueToBase } from '../utils/units';
+import { UNITS, getDisplayUnit, convertValueToDisplay, convertValueToBase, SUGGESTED_IMPERIAL_WEIGHTS } from '../utils/units';
 import starkLogo from '../assets/stark_logo_rounded.png';
 import starkPersonHealth from '../assets/stark_personhealth.png';
 
@@ -30,7 +30,25 @@ const Onboarding = ({ onComplete }) => {
   };
 
   const getInputValue = (field, unit, decimals = 1) => formatDisplayValue(unit, userData[field], decimals);
-  const getPlaceholderValue = (unit, baseValue, decimals = 1) => formatDisplayValue(unit, baseValue, decimals);
+  const getPlaceholderValue = (field, unit, baseValue, decimals = 1) => {
+    if (measurementSystem === UNITS.IMPERIAL) {
+      const override = SUGGESTED_IMPERIAL_WEIGHTS[field];
+      if (override !== undefined) {
+        return String(override);
+      }
+    }
+
+    const formatted = formatDisplayValue(unit, baseValue, decimals);
+    if (formatted) {
+      return formatted;
+    }
+
+    if (baseValue === undefined || baseValue === null) {
+      return '';
+    }
+
+    return String(baseValue);
+  };
 
   const steps = [
     {
@@ -270,7 +288,7 @@ const Onboarding = ({ onComplete }) => {
                   value={getInputValue('bench_press_1rm', 'kg', 1)}
                   onChange={(e) => updateField('bench_press_1rm', e.target.value, 'kg')}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  placeholder={`e.g., ${getPlaceholderValue('kg', 80, 0) || 80}`}
+                  placeholder={`e.g., ${getPlaceholderValue('bench_press_1rm', 'kg', 80, 0)}`}
                 />
               </div>
               <div>
@@ -282,7 +300,7 @@ const Onboarding = ({ onComplete }) => {
                   value={getInputValue('squat_1rm', 'kg', 1)}
                   onChange={(e) => updateField('squat_1rm', e.target.value, 'kg')}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  placeholder={`e.g., ${getPlaceholderValue('kg', 100, 0) || 100}`}
+                  placeholder={`e.g., ${getPlaceholderValue('squat_1rm', 'kg', 100, 0)}`}
                 />
               </div>
               <div>
@@ -294,7 +312,7 @@ const Onboarding = ({ onComplete }) => {
                   value={getInputValue('deadlift_1rm', 'kg', 1)}
                   onChange={(e) => updateField('deadlift_1rm', e.target.value, 'kg')}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  placeholder={`e.g., ${getPlaceholderValue('kg', 120, 0) || 120}`}
+                  placeholder={`e.g., ${getPlaceholderValue('deadlift_1rm', 'kg', 120, 0)}`}
                 />
               </div>
               <div>
@@ -306,7 +324,7 @@ const Onboarding = ({ onComplete }) => {
                   value={getInputValue('overhead_press_1rm', 'kg', 1)}
                   onChange={(e) => updateField('overhead_press_1rm', e.target.value, 'kg')}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  placeholder={`e.g., ${getPlaceholderValue('kg', 50, 0) || 50}`}
+                  placeholder={`e.g., ${getPlaceholderValue('overhead_press_1rm', 'kg', 50, 0)}`}
                 />
               </div>
             </div>
@@ -380,7 +398,7 @@ const Onboarding = ({ onComplete }) => {
                   value={getInputValue('vertical_jump', 'cm', 1)}
                   onChange={(e) => updateField('vertical_jump', e.target.value, 'cm')}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  placeholder={`e.g., ${getPlaceholderValue('cm', 50, 1) || 50}`}
+                  placeholder={`e.g., ${getPlaceholderValue('vertical_jump', 'cm', 50, 1)}`}
                 />
               </div>
               <div>
@@ -392,7 +410,7 @@ const Onboarding = ({ onComplete }) => {
                   value={getInputValue('broad_jump', 'cm', 1)}
                   onChange={(e) => updateField('broad_jump', e.target.value, 'cm')}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  placeholder={`e.g., ${getPlaceholderValue('cm', 220, 1) || 220}`}
+                  placeholder={`e.g., ${getPlaceholderValue('broad_jump', 'cm', 220, 1)}`}
                 />
               </div>
             </div>
@@ -416,7 +434,7 @@ const Onboarding = ({ onComplete }) => {
                   value={getInputValue('sit_reach', 'cm', 1)}
                   onChange={(e) => updateField('sit_reach', e.target.value, 'cm')}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  placeholder={`e.g., ${getPlaceholderValue('cm', 5, 1) || 5}`}
+                  placeholder={`e.g., ${getPlaceholderValue('sit_reach', 'cm', 5, 1)}`}
                 />
               </div>
               <div>
@@ -428,7 +446,7 @@ const Onboarding = ({ onComplete }) => {
                   value={getInputValue('shoulder_flexibility', 'cm', 1)}
                   onChange={(e) => updateField('shoulder_flexibility', e.target.value, 'cm')}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  placeholder={`e.g., ${getPlaceholderValue('cm', 12, 1) || 12}`}
+                  placeholder={`e.g., ${getPlaceholderValue('shoulder_flexibility', 'cm', 12, 1)}`}
                 />
               </div>
             </div>
@@ -467,7 +485,7 @@ const Onboarding = ({ onComplete }) => {
                   value={getInputValue('waist_circumference', 'cm', 1)}
                   onChange={(e) => updateField('waist_circumference', e.target.value, 'cm')}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  placeholder={`e.g., ${getPlaceholderValue('cm', 80, 1) || 80}`}
+                  placeholder={`e.g., ${getPlaceholderValue('waist_circumference', 'cm', 80, 1)}`}
                 />
               </div>
             </div>

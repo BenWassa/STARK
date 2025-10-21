@@ -36,6 +36,13 @@ export const distanceConversions = {
   ftToM: (ft) => ft / 3.28084
 };
 
+export const SUGGESTED_IMPERIAL_WEIGHTS = {
+  bench_press_1rm: 175,
+  squat_1rm: 225,
+  deadlift_1rm: 315,
+  overhead_press_1rm: 95
+};
+
 /**
  * Format weight based on measurement system
  */

@@ -8,7 +8,7 @@ import { buildNormativeData } from './utils/norms';
 // Build normalized normativeData for app usage
 const normativeData = buildNormativeData(normativeDataRaw);
 import { calculateZScore, zScoreToPercentile, getPerformanceLabel, calculateFitnessIndex, calculateFitnessAge, calculateUserResults, getDomainConfig, exportUserData } from './utils/calculations';
-import { UNITS, getDisplayUnit, convertValueToDisplay, convertValueToBase } from './utils/units';
+import { UNITS, getDisplayUnit, convertValueToDisplay, convertValueToBase, SUGGESTED_IMPERIAL_WEIGHTS } from './utils/units';
 import { saveUserData, loadUserData, saveAppState, loadAppState, exportAllData, clearAllData, importData, getAllBackups } from './utils/storage';
 import packageJson from '../package.json' assert { type: 'json' };
 import Onboarding from './components/Onboarding';
