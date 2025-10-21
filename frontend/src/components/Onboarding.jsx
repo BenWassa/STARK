@@ -2,7 +2,7 @@ import React, { useState, useContext } from 'react';
 import { ChevronLeft, ChevronRight, Check, Heart, Zap, TrendingUp, Droplet, Battery } from 'lucide-react';
 import { DataContext } from '../App';
 import { saveAppState } from '../utils/storage';
-import { weightConversions, heightConversions, distanceConversions } from '../utils/units';
+import { UNITS, getDisplayUnit, convertValueToDisplay, convertValueToBase } from '../utils/units';
 import starkLogo from '../assets/stark_logo_rounded.png';
 import starkPersonHealth from '../assets/stark_personhealth.png';
 
@@ -10,15 +10,27 @@ const Onboarding = ({ onComplete }) => {
   const { userData, setUserData } = useContext(DataContext);
   const [currentStep, setCurrentStep] = useState(0);
 
-  // Helper functions for unit conversions and labels
-  const isImperial = userData.measurementSystem === 'imperial';
-  
-  const getWeightUnit = () => isImperial ? 'lbs' : 'kg';
-  const getHeightUnit = () => isImperial ? 'in' : 'cm';
-  const getDistanceUnit = () => isImperial ? 'miles' : 'km';
-  
-  const convertWeight = (kg) => isImperial ? Math.round(weightConversions.kgToLbs(kg)) : kg;
-  const convertHeight = (cm) => isImperial ? Math.round(heightConversions.cmToIn(cm)) : cm;
+  const measurementSystem = userData.measurementSystem || UNITS.METRIC;
+
+  const getWeightUnit = () => getDisplayUnit('kg', measurementSystem);
+  const getHeightUnit = () => getDisplayUnit('cm', measurementSystem);
+
+  const formatDisplayValue = (unit, baseValue, decimals = 1) => {
+    if (baseValue === undefined || baseValue === null || baseValue === '') {
+      return '';
+    }
+
+    const converted = convertValueToDisplay(unit, baseValue, measurementSystem);
+    if (!Number.isFinite(converted)) {
+      return '';
+    }
+
+    const fixed = converted.toFixed(decimals);
+    return fixed.replace(/\.0+$/, '').replace(/(\.\d*[1-9])0+$/, '$1');
+  };
+
+  const getInputValue = (field, unit, decimals = 1) => formatDisplayValue(unit, userData[field], decimals);
+  const getPlaceholderValue = (unit, baseValue, decimals = 1) => formatDisplayValue(unit, baseValue, decimals);
 
   const steps = [
     {
@@ -73,8 +85,27 @@ const Onboarding = ({ onComplete }) => {
   const showStepTitle = currentStep !== 0 && Boolean(currentStepMeta.title);
   const showStepDescription = Boolean(currentStepMeta.description);
 
-  const updateField = (field, value) => {
-    setUserData(prev => ({ ...prev, [field]: parseFloat(value) || value }));
+  const updateField = (field, value, unit) => {
+    setUserData(prev => {
+      if (value === '' || value === null) {
+        return { ...prev, [field]: '' };
+      }
+
+      if (unit) {
+        const numeric = parseFloat(value);
+        if (Number.isNaN(numeric)) {
+          return prev;
+        }
+        const baseValue = convertValueToBase(unit, numeric, measurementSystem);
+        return { ...prev, [field]: baseValue };
+      }
+
+      const numeric = parseFloat(value);
+      if (Number.isNaN(numeric)) {
+        return { ...prev, [field]: value };
+      }
+      return { ...prev, [field]: numeric };
+    });
   };
 
   const nextStep = () => {
@@ -236,10 +267,10 @@ const Onboarding = ({ onComplete }) => {
                 </label>
                 <input
                   type="number"
-                  value={userData.bench_press_1rm || ''}
-                  onChange={(e) => updateField('bench_press_1rm', e.target.value)}
+                  value={getInputValue('bench_press_1rm', 'kg', 1)}
+                  onChange={(e) => updateField('bench_press_1rm', e.target.value, 'kg')}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  placeholder={`e.g., ${convertWeight(80)}`}
+                  placeholder={`e.g., ${getPlaceholderValue('kg', 80, 0) || 80}`}
                 />
               </div>
               <div>
@@ -248,10 +279,10 @@ const Onboarding = ({ onComplete }) => {
                 </label>
                 <input
                   type="number"
-                  value={userData.squat_1rm || ''}
-                  onChange={(e) => updateField('squat_1rm', e.target.value)}
+                  value={getInputValue('squat_1rm', 'kg', 1)}
+                  onChange={(e) => updateField('squat_1rm', e.target.value, 'kg')}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  placeholder={`e.g., ${convertWeight(100)}`}
+                  placeholder={`e.g., ${getPlaceholderValue('kg', 100, 0) || 100}`}
                 />
               </div>
               <div>
@@ -260,10 +291,10 @@ const Onboarding = ({ onComplete }) => {
                 </label>
                 <input
                   type="number"
-                  value={userData.deadlift_1rm || ''}
-                  onChange={(e) => updateField('deadlift_1rm', e.target.value)}
+                  value={getInputValue('deadlift_1rm', 'kg', 1)}
+                  onChange={(e) => updateField('deadlift_1rm', e.target.value, 'kg')}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  placeholder={`e.g., ${convertWeight(120)}`}
+                  placeholder={`e.g., ${getPlaceholderValue('kg', 120, 0) || 120}`}
                 />
               </div>
               <div>
@@ -272,10 +303,10 @@ const Onboarding = ({ onComplete }) => {
                 </label>
                 <input
                   type="number"
-                  value={userData.overhead_press_1rm || ''}
-                  onChange={(e) => updateField('overhead_press_1rm', e.target.value)}
+                  value={getInputValue('overhead_press_1rm', 'kg', 1)}
+                  onChange={(e) => updateField('overhead_press_1rm', e.target.value, 'kg')}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  placeholder={`e.g., ${convertWeight(50)}`}
+                  placeholder={`e.g., ${getPlaceholderValue('kg', 50, 0) || 50}`}
                 />
               </div>
             </div>
@@ -346,10 +377,10 @@ const Onboarding = ({ onComplete }) => {
                 </label>
                 <input
                   type="number"
-                  value={userData.vertical_jump || ''}
-                  onChange={(e) => updateField('vertical_jump', e.target.value)}
+                  value={getInputValue('vertical_jump', 'cm', 1)}
+                  onChange={(e) => updateField('vertical_jump', e.target.value, 'cm')}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  placeholder={`e.g., ${convertHeight(50)}`}
+                  placeholder={`e.g., ${getPlaceholderValue('cm', 50, 1) || 50}`}
                 />
               </div>
               <div>
@@ -358,10 +389,10 @@ const Onboarding = ({ onComplete }) => {
                 </label>
                 <input
                   type="number"
-                  value={userData.broad_jump || ''}
-                  onChange={(e) => updateField('broad_jump', e.target.value)}
+                  value={getInputValue('broad_jump', 'cm', 1)}
+                  onChange={(e) => updateField('broad_jump', e.target.value, 'cm')}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  placeholder={`e.g., ${convertHeight(220)}`}
+                  placeholder={`e.g., ${getPlaceholderValue('cm', 220, 1) || 220}`}
                 />
               </div>
             </div>
@@ -382,22 +413,22 @@ const Onboarding = ({ onComplete }) => {
                 </label>
                 <input
                   type="number"
-                  value={userData.sit_reach || ''}
-                  onChange={(e) => updateField('sit_reach', e.target.value)}
+                  value={getInputValue('sit_reach', 'cm', 1)}
+                  onChange={(e) => updateField('sit_reach', e.target.value, 'cm')}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  placeholder={`e.g., ${convertHeight(5)}`}
+                  placeholder={`e.g., ${getPlaceholderValue('cm', 5, 1) || 5}`}
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Shoulder Flexibility (cm)
+                  Shoulder Flexibility ({getHeightUnit()})
                 </label>
                 <input
                   type="number"
-                  value={userData.shoulder_flexibility || ''}
-                  onChange={(e) => updateField('shoulder_flexibility', e.target.value)}
+                  value={getInputValue('shoulder_flexibility', 'cm', 1)}
+                  onChange={(e) => updateField('shoulder_flexibility', e.target.value, 'cm')}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  placeholder="e.g., 12"
+                  placeholder={`e.g., ${getPlaceholderValue('cm', 12, 1) || 12}`}
                 />
               </div>
             </div>
@@ -429,14 +460,14 @@ const Onboarding = ({ onComplete }) => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Waist Circumference (cm)
+                  Waist Circumference ({getHeightUnit()})
                 </label>
                 <input
                   type="number"
-                  value={userData.waist_circumference || ''}
-                  onChange={(e) => updateField('waist_circumference', e.target.value)}
+                  value={getInputValue('waist_circumference', 'cm', 1)}
+                  onChange={(e) => updateField('waist_circumference', e.target.value, 'cm')}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  placeholder="e.g., 80"
+                  placeholder={`e.g., ${getPlaceholderValue('cm', 80, 1) || 80}`}
                 />
               </div>
             </div>

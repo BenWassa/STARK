@@ -8,6 +8,7 @@ import { buildNormativeData } from './utils/norms';
 // Build normalized normativeData for app usage
 const normativeData = buildNormativeData(normativeDataRaw);
 import { calculateZScore, zScoreToPercentile, getPerformanceLabel, calculateFitnessIndex, calculateFitnessAge, calculateUserResults, getDomainConfig, exportUserData } from './utils/calculations';
+import { UNITS, getDisplayUnit, convertValueToDisplay, convertValueToBase } from './utils/units';
 import { saveUserData, loadUserData, saveAppState, loadAppState, exportAllData, clearAllData, importData, getAllBackups } from './utils/storage';
 import packageJson from '../package.json' assert { type: 'json' };
 import Onboarding from './components/Onboarding';
@@ -17,6 +18,13 @@ const ThemeContext = createContext();
 const DataContext = createContext();
 
 export { DataContext, ThemeContext };
+
+const exerciseLookupById = Object.values(exerciseMetricsData.exerciseMetrics || {}).reduce((acc, domainExercises) => {
+  domainExercises.forEach((exercise) => {
+    acc[exercise.id] = exercise;
+  });
+  return acc;
+}, {});
 
 const ThemeProvider = ({ children }) => {
   const [darkMode] = useState(true); // Always dark mode
@@ -316,11 +324,117 @@ const FitnessModule = () => {
   const [showLogModal, setShowLogModal] = useState(false);
   const [logStep, setLogStep] = useState(0);
   const [tempExercises, setTempExercises] = useState({});
+  const measurementSystem = userData.measurementSystem || UNITS.METRIC;
+  const previousMeasurementSystemRef = useRef(measurementSystem);
 
   useEffect(() => {
     const results = calculateUserResults(userData);
     setResults(results);
   }, [userData]);
+
+  const getDecimalsForUnit = (unit) => {
+    const normalized = (unit || '').toLowerCase();
+    if (normalized === 'kg' || normalized === 'lbs') {
+      return 1;
+    }
+    if (normalized === 'cm' || normalized === 'in') {
+      return 1;
+    }
+    if (normalized === 'km' || normalized === 'miles') {
+      return 2;
+    }
+    return 0;
+  };
+
+  const formatNumericValue = (value, decimals = 1) => {
+    if (!Number.isFinite(value)) {
+      return '';
+    }
+    const fixed = value.toFixed(decimals);
+    return fixed.replace(/\.0+$/, '').replace(/(\.\d*[1-9])0+$/, '$1');
+  };
+
+  const formatValueForExercise = (exercise, numericValue) => {
+    if (numericValue === undefined || numericValue === null) {
+      return '';
+    }
+    if (!Number.isFinite(numericValue)) {
+      return '';
+    }
+    const decimals = getDecimalsForUnit(exercise.unit);
+    return formatNumericValue(numericValue, decimals);
+  };
+
+  const getPlaceholderValue = (exercise) => {
+    const converted = convertValueToDisplay(exercise.unit, exercise.defaultValue, measurementSystem);
+    const formatted = formatValueForExercise(exercise, converted);
+    if (formatted) {
+      return formatted;
+    }
+    if (exercise.defaultValue === undefined || exercise.defaultValue === null) {
+      return '';
+    }
+    return String(exercise.defaultValue);
+  };
+
+  const getInputValue = (exercise) => {
+    if (Object.prototype.hasOwnProperty.call(tempExercises, exercise.id)) {
+      return tempExercises[exercise.id];
+    }
+
+    const storedValue = userData.loggedExercises?.[exercise.id];
+    if (storedValue === undefined || storedValue === null || storedValue === '') {
+      return '';
+    }
+
+    const converted = convertValueToDisplay(exercise.unit, storedValue, measurementSystem);
+    return formatValueForExercise(exercise, converted);
+  };
+
+  const getUnitLabel = (exercise) => getDisplayUnit(exercise.unit, measurementSystem);
+
+  const closeLogModal = () => {
+    setShowLogModal(false);
+    setLogStep(0);
+    setTempExercises({});
+    previousMeasurementSystemRef.current = measurementSystem;
+  };
+
+  useEffect(() => {
+    if (!showLogModal) {
+      previousMeasurementSystemRef.current = measurementSystem;
+      return;
+    }
+
+    const previousSystem = previousMeasurementSystemRef.current;
+    if (previousSystem === measurementSystem) {
+      return;
+    }
+
+    setTempExercises((prevInputs) => {
+      const nextInputs = {};
+      Object.entries(prevInputs).forEach(([exerciseId, value]) => {
+        const exercise = exerciseLookupById[exerciseId];
+        if (!exercise) {
+          nextInputs[exerciseId] = value;
+          return;
+        }
+
+        const numeric = parseFloat(value);
+        if (Number.isNaN(numeric)) {
+          nextInputs[exerciseId] = value;
+          return;
+        }
+
+        const baseValue = convertValueToBase(exercise.unit, numeric, previousSystem);
+        const displayValue = convertValueToDisplay(exercise.unit, baseValue, measurementSystem);
+        nextInputs[exerciseId] = formatValueForExercise(exercise, displayValue);
+      });
+      return nextInputs;
+    });
+
+    previousMeasurementSystemRef.current = measurementSystem;
+  }, [measurementSystem, showLogModal]);
 
   const updateField = (field, value) => {
     setUserData(prev => ({ ...prev, [field]: parseFloat(value) || 0 }));
@@ -382,13 +496,13 @@ const FitnessModule = () => {
           </h2>
           <SpiderChart data={results.domains} darkMode={darkMode} />
           <div className="flex justify-center mt-4">
-            <button
-              onClick={() => {
-                // Initialize temp exercises with existing logged values
-                setTempExercises(userData.loggedExercises || {});
-                setLogStep(0);
-                setShowLogModal(true);
-              }}
+              <button
+                onClick={() => {
+                  setTempExercises({});
+                  setLogStep(0);
+                  previousMeasurementSystemRef.current = measurementSystem;
+                  setShowLogModal(true);
+                }}
               className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white rounded-2xl transition-all duration-200"
             >
               <Database className="w-4 h-4" />
@@ -527,7 +641,7 @@ const FitnessModule = () => {
                 Log Your Progress
               </h3>
               <button
-                onClick={() => setShowLogModal(false)}
+                onClick={closeLogModal}
                 className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
               >
                 <X className="w-6 h-6" />
@@ -593,29 +707,35 @@ const FitnessModule = () => {
 
                       {/* Exercise Inputs */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {exercises.map((exercise) => (
-                          <div key={exercise.id}>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                              {exercise.name}
-                              <span className="text-gray-500 dark:text-gray-400 ml-1">
-                                ({exercise.unit})
-                              </span>
-                            </label>
-                            <input
-                              type="number"
-                              value={tempExercises[exercise.id] || ''}
-                              onChange={(e) => setTempExercises(prev => ({ 
-                                ...prev, 
-                                [exercise.id]: e.target.value 
-                              }))}
-                              placeholder={`e.g. ${exercise.defaultValue}`}
-                              className="w-full px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                            />
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                              {exercise.description}
-                            </p>
-                          </div>
-                        ))}
+                        {exercises.map((exercise) => {
+                          const unitLabel = getUnitLabel(exercise);
+                          const placeholderExample = getPlaceholderValue(exercise);
+                          const inputValue = getInputValue(exercise);
+
+                          return (
+                            <div key={exercise.id}>
+                              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                {exercise.name}
+                                <span className="text-gray-500 dark:text-gray-400 ml-1">
+                                  ({unitLabel})
+                                </span>
+                              </label>
+                              <input
+                                type="number"
+                                value={inputValue}
+                                onChange={(e) => setTempExercises(prev => ({
+                                  ...prev,
+                                  [exercise.id]: e.target.value
+                                }))}
+                                placeholder={placeholderExample ? `e.g. ${placeholderExample}` : undefined}
+                                className="w-full px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                              />
+                              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                {exercise.description}
+                              </p>
+                            </div>
+                          );
+                        })}
                       </div>
                     </motion.div>
                   );
@@ -638,18 +758,36 @@ const FitnessModule = () => {
 
               <button
                 onClick={() => {
-                  // Save only the filled exercises
+                  const normalizedEntries = Object.entries(tempExercises)
+                    .filter(([, value]) => value !== '' && value !== null && value !== undefined)
+                    .reduce((acc, [exerciseId, value]) => {
+                      const exercise = exerciseLookupById[exerciseId];
+                      const numericValue = parseFloat(value);
+
+                      if (!exercise || Number.isNaN(numericValue)) {
+                        if (!Number.isNaN(numericValue)) {
+                          acc[exerciseId] = numericValue;
+                        }
+                        return acc;
+                      }
+
+                      const baseValue = convertValueToBase(exercise.unit, numericValue, measurementSystem);
+                      if (!Number.isFinite(baseValue)) {
+                        return acc;
+                      }
+
+                      acc[exerciseId] = Number(baseValue.toFixed(2));
+                      return acc;
+                    }, {});
+
                   setUserData(prev => ({
                     ...prev,
                     loggedExercises: {
                       ...prev.loggedExercises,
-                      ...Object.fromEntries(
-                        Object.entries(tempExercises).filter(([_, value]) => value !== '' && value !== null)
-                      )
+                      ...normalizedEntries
                     }
                   }));
-                  setShowLogModal(false);
-                  setLogStep(0);
+                  closeLogModal();
                 }}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-teal-500 hover:from-blue-600 hover:to-teal-600 text-white rounded-2xl transition-all duration-200"
               >
