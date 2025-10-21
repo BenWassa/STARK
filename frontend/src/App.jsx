@@ -35,7 +35,7 @@ const ThemeProvider = ({ children }) => {
   );
 };
 
-const DataProvider = ({ children, isDevMode, runOnboarding, clearAllAppData, loadMockData, toggleMeasurementSystem }) => {
+const DataProvider = ({ children, isDevMode, runOnboarding, clearAllAppData }) => {
   const [userData, setUserData] = useState({
     age: 26,
     gender: 'male',
@@ -51,6 +51,30 @@ const DataProvider = ({ children, isDevMode, runOnboarding, clearAllAppData, loa
     recovery: 50
   });
   const [isLoading, setIsLoading] = useState(true);
+
+  const loadMockData = () => {
+    const mockData = {
+      age: 28,
+      gender: 'male',
+      vo2max: 48,
+      measurementSystem: 'metric',
+      strength: 75,
+      endurance: 68,
+      power: 72,
+      mobility: 65,
+      bodyComp: 58,
+      recovery: 70
+    };
+    setUserData(mockData);
+    console.log('🎭 Mock data loaded:', mockData);
+  };
+
+  const toggleMeasurementSystem = () => {
+    setUserData(prev => ({
+      ...prev,
+      measurementSystem: prev.measurementSystem === 'metric' ? 'imperial' : 'metric'
+    }));
+  };
 
   useEffect(() => {
     // Load data from IndexedDB on mount
@@ -1095,23 +1119,6 @@ const App = () => {
     }
   }, []);
 
-  const loadMockData = () => {
-    const mockData = {
-      age: 28,
-      gender: 'male',
-      vo2max: 48,
-      measurementSystem: 'metric',
-      strength: 75,
-      endurance: 68,
-      power: 72,
-      mobility: 65,
-      bodyComp: 58,
-      recovery: 70
-    };
-    setUserData(mockData);
-    console.log('🎭 Mock data loaded:', mockData);
-  };
-
   const runOnboarding = () => {
     setShowOnboarding(true);
   };
@@ -1142,11 +1149,6 @@ const App = () => {
     if (window.confirm('⚠️ Clear ALL app data? This cannot be undone!\n\nThis will reset onboarding, user data, and all settings.')) {
       await performClear();
     }
-  };
-
-  const toggleMeasurementSystem = () => {
-    const newSystem = userData.measurementSystem === 'metric' ? 'imperial' : 'metric';
-    setUserData(prev => ({ ...prev, measurementSystem: newSystem }));
   };
 
   useEffect(() => {
@@ -1184,7 +1186,7 @@ const App = () => {
   if (!onboardingComplete && !isDevMode) {
     return (
       <ThemeProvider>
-        <DataProvider isDevMode={isDevMode} runOnboarding={runOnboarding} clearAllAppData={clearAllAppData} loadMockData={loadMockData} toggleMeasurementSystem={toggleMeasurementSystem}>
+        <DataProvider isDevMode={isDevMode} runOnboarding={runOnboarding} clearAllAppData={clearAllAppData}>
           <Onboarding onComplete={handleOnboardingComplete} />
         </DataProvider>
       </ThemeProvider>
@@ -1194,7 +1196,7 @@ const App = () => {
   if (showOnboarding) {
     return (
       <ThemeProvider>
-        <DataProvider isDevMode={isDevMode} runOnboarding={runOnboarding} clearAllAppData={clearAllAppData} loadMockData={loadMockData} toggleMeasurementSystem={toggleMeasurementSystem}>
+        <DataProvider isDevMode={isDevMode} runOnboarding={runOnboarding} clearAllAppData={clearAllAppData}>
           <Onboarding onComplete={() => {
             setShowOnboarding(false);
             handleOnboardingComplete();
@@ -1206,7 +1208,7 @@ const App = () => {
 
   return (
     <ThemeProvider>
-      <DataProvider isDevMode={isDevMode} runOnboarding={runOnboarding} clearAllAppData={clearAllAppData} loadMockData={loadMockData} toggleMeasurementSystem={toggleMeasurementSystem}>
+      <DataProvider isDevMode={isDevMode} runOnboarding={runOnboarding} clearAllAppData={clearAllAppData}>
         <Shell>
           <FitnessModule />
         </Shell>
