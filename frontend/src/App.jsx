@@ -1,6 +1,6 @@
 import React, { useState, useEffect, createContext, useContext, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Download, Zap, Battery, Droplet, Heart, TrendingUp, Trash2, Ruler, Play, Database, Upload, X, Info, Menu, Edit, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Download, Zap, Battery, Droplet, Heart, TrendingUp, Trash2, Ruler, Play, Database, Upload, X, Info, Menu, Edit, ChevronLeft, ChevronRight, AlertTriangle } from 'lucide-react';
 import normativeDataRaw from './data/exercise_metrics.json' assert { type: 'json' };
 import exerciseMetricsData from './data/exercise_metrics.json' assert { type: 'json' };
 import { buildNormativeData } from './utils/norms';
@@ -693,6 +693,7 @@ const Shell = ({ children }) => {
   const [latestBackup, setLatestBackup] = useState(null);
   const [importingData, setImportingData] = useState(false);
   const importInputRef = useRef(null);
+  const [showClearDataModal, setShowClearDataModal] = useState(false);
 
   const exportData = async () => {
     try {
@@ -851,7 +852,7 @@ const Shell = ({ children }) => {
               </button>
               {isDevMode && (
                 <button
-                  onClick={clearAllAppData}
+                  onClick={() => clearAllAppData()}
                   className="p-2 rounded hover:bg-red-100 dark:hover:bg-red-900 transition-colors"
                   title="🛠️ DEV: Clear All Data"
                 >
@@ -949,6 +950,14 @@ const Shell = ({ children }) => {
                     <Upload className="w-4 h-4" />
                     {importingData ? 'Importing…' : 'Import data'}
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowClearDataModal(true)}
+                    className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-md bg-red-600/90 hover:bg-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 text-white text-sm font-semibold shadow-sm transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Clear all data
+                  </button>
                 </div>
                 <div className="mt-4 rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/40 p-3">
                   <p className="text-xs font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wide">
@@ -1001,6 +1010,53 @@ const Shell = ({ children }) => {
             onClick={() => setIsSideNavOpen(false)}
             aria-hidden="true"
           />
+        </div>
+      )}
+      {showClearDataModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div
+            className="absolute inset-0 bg-gray-900/70 backdrop-blur-sm"
+            onClick={() => setShowClearDataModal(false)}
+            aria-hidden="true"
+          />
+          <div className="relative w-full max-w-md rounded-xl border border-red-500/30 bg-white dark:bg-gray-900 shadow-2xl">
+            <div className="p-6">
+              <div className="flex items-start gap-3">
+                <span className="inline-flex items-center justify-center rounded-full bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-300 p-2">
+                  <AlertTriangle className="w-5 h-5" aria-hidden="true" />
+                </span>
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Permanently delete all data?</h2>
+                  <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
+                    This will erase your fitness metrics, onboarding progress, backups, and app preferences from this device. This action cannot be undone.
+                  </p>
+                </div>
+              </div>
+              <div className="mt-6 space-y-2 rounded-lg border border-red-200/40 bg-red-50/70 dark:border-red-900/60 dark:bg-red-900/30 p-3 text-xs text-red-700 dark:text-red-200">
+                <p className="font-semibold uppercase tracking-wide">Before you continue</p>
+                <p>Export your data first if you want to keep a backup. Clearing data will remove all saved copies from this browser.</p>
+              </div>
+              <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                <button
+                  type="button"
+                  onClick={() => setShowClearDataModal(false)}
+                  className="inline-flex items-center justify-center rounded-md border border-gray-300 dark:border-gray-700 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    setShowClearDataModal(false);
+                    await clearAllAppData({ requireConfirm: false });
+                  }}
+                  className="inline-flex items-center justify-center rounded-md bg-red-600 hover:bg-red-700 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+                >
+                  Delete everything
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>
@@ -1060,17 +1116,14 @@ const App = () => {
     setShowOnboarding(true);
   };
 
-  const clearAllAppData = async () => {
-    if (window.confirm('⚠️ Clear ALL app data? This cannot be undone!\n\nThis will reset onboarding, user data, and all settings.')) {
+  const clearAllAppData = async ({ requireConfirm = true } = {}) => {
+    const performClear = async () => {
       try {
         const success = await clearAllData();
         if (success) {
-          // Clear localStorage as well
           localStorage.clear();
-          // Reset app state
           setOnboardingComplete(false);
           setAppLoading(true);
-          // Reload the page to reset everything
           window.location.reload();
         } else {
           alert('Failed to clear data. Check console for errors.');
@@ -1079,6 +1132,15 @@ const App = () => {
         console.error('Error clearing data:', error);
         alert('Error clearing data. Check console for details.');
       }
+    };
+
+    if (!requireConfirm) {
+      await performClear();
+      return;
+    }
+
+    if (window.confirm('⚠️ Clear ALL app data? This cannot be undone!\n\nThis will reset onboarding, user data, and all settings.')) {
+      await performClear();
     }
   };
 

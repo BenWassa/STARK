@@ -358,7 +358,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ---
 
-**Current Version:** 1.3.0  
+**Current Version:** 1.4.0
 **Repository:** [github.com/BenWassa/STARK](https://github.com/BenWassa/STARK)  
 **Live Demo:** [benwassa.github.io/STARK](https://benwassa.github.io/STARK)
 
