@@ -36,6 +36,13 @@ export const distanceConversions = {
   ftToM: (ft) => ft / 3.28084
 };
 
+export const SUGGESTED_IMPERIAL_WEIGHTS = {
+  bench_press_1rm: 175,
+  squat_1rm: 225,
+  deadlift_1rm: 315,
+  overhead_press_1rm: 95
+};
+
 /**
  * Format weight based on measurement system
  */
@@ -119,4 +126,94 @@ export const getUnitLabels = (system = UNITS.METRIC) => {
     heightLong: 'centimeters',
     distanceLong: 'kilometers'
   };
+};
+
+const normalizeUnit = (unit) => (unit || '').toLowerCase();
+
+const isWeightUnit = (unit) => normalizeUnit(unit) === 'kg';
+const isLengthUnit = (unit) => normalizeUnit(unit) === 'cm';
+const isDistanceUnit = (unit) => normalizeUnit(unit) === 'km';
+
+const toNumber = (value) => {
+  if (value === null || value === undefined || value === '') {
+    return NaN;
+  }
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : NaN;
+  }
+  const parsed = parseFloat(value);
+  return Number.isFinite(parsed) ? parsed : NaN;
+};
+
+/**
+ * Get the display unit for a base unit given the measurement system.
+ */
+export const getDisplayUnit = (unit, system = UNITS.METRIC) => {
+  const normalized = normalizeUnit(unit);
+
+  if (isWeightUnit(normalized)) {
+    return system === UNITS.IMPERIAL ? 'lbs' : 'kg';
+  }
+
+  if (isLengthUnit(normalized)) {
+    return system === UNITS.IMPERIAL ? 'in' : 'cm';
+  }
+
+  if (isDistanceUnit(normalized)) {
+    return system === UNITS.IMPERIAL ? 'miles' : 'km';
+  }
+
+  return unit;
+};
+
+/**
+ * Convert a base-unit value to the active measurement system for display.
+ */
+export const convertValueToDisplay = (unit, value, system = UNITS.METRIC) => {
+  const normalized = normalizeUnit(unit);
+  const numeric = toNumber(value);
+
+  if (!Number.isFinite(numeric)) {
+    return numeric;
+  }
+
+  if (isWeightUnit(normalized) && system === UNITS.IMPERIAL) {
+    return weightConversions.kgToLbs(numeric);
+  }
+
+  if (isLengthUnit(normalized) && system === UNITS.IMPERIAL) {
+    return heightConversions.cmToIn(numeric);
+  }
+
+  if (isDistanceUnit(normalized) && system === UNITS.IMPERIAL) {
+    return distanceConversions.kmToMiles(numeric);
+  }
+
+  return numeric;
+};
+
+/**
+ * Convert a display value back to the base unit (metric) for storage.
+ */
+export const convertValueToBase = (unit, value, system = UNITS.METRIC) => {
+  const normalized = normalizeUnit(unit);
+  const numeric = toNumber(value);
+
+  if (!Number.isFinite(numeric)) {
+    return numeric;
+  }
+
+  if (isWeightUnit(normalized) && system === UNITS.IMPERIAL) {
+    return weightConversions.lbsToKg(numeric);
+  }
+
+  if (isLengthUnit(normalized) && system === UNITS.IMPERIAL) {
+    return heightConversions.inToCm(numeric);
+  }
+
+  if (isDistanceUnit(normalized) && system === UNITS.IMPERIAL) {
+    return distanceConversions.milesToKm(numeric);
+  }
+
+  return numeric;
 };

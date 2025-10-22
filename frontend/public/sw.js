@@ -1,4 +1,5 @@
-const CACHE_NAME = 'stark-fitness-v1.1.3';
+// Keep the cache name aligned with the app version. Update when publishing.
+const CACHE_NAME = 'stark-fitness-v1.5.0';
 const STATIC_CACHE_URLS = [
   './',
   './manifest.json',
@@ -19,8 +20,9 @@ self.addEventListener('install', (event) => {
         console.error('Service Worker: Cache installation failed:', error);
       })
   );
-  // Force the waiting service worker to become the active service worker
-  self.skipWaiting();
+  // Do NOT auto-activate. Allow the page to prompt the user first.
+  // The waiting worker can be activated on demand by posting { type: 'SKIP_WAITING' }.
+  // self.skipWaiting();
 });
 
 // Activate event - clean up old caches
@@ -40,6 +42,15 @@ self.addEventListener('activate', (event) => {
   );
   // Take control of all clients immediately
   self.clients.claim();
+});
+
+// Listen for messages from the client to trigger skipWaiting when the user accepts the update
+self.addEventListener('message', (event) => {
+  if (!event.data) return;
+  if (event.data.type === 'SKIP_WAITING') {
+    console.log('Service Worker: Received SKIP_WAITING message, calling skipWaiting()');
+    self.skipWaiting();
+  }
 });
 
 // Fetch event - serve from cache when offline

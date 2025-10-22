@@ -1,6 +1,6 @@
-import React, { useState, useEffect, createContext, useContext, useRef } from 'react';
+import React, { useState, useEffect, createContext, useContext, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Download, Zap, Battery, Droplet, Heart, TrendingUp, Trash2, Ruler, Play, Database, Upload, X, Info, Menu, Edit, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Download, Zap, Battery, Droplet, Heart, TrendingUp, Trash2, Ruler, Play, Database, Upload, X, Info, Menu, Edit, ChevronLeft, ChevronRight, AlertTriangle } from 'lucide-react';
 import normativeDataRaw from './data/exercise_metrics.json' assert { type: 'json' };
 import exerciseMetricsData from './data/exercise_metrics.json' assert { type: 'json' };
 import { buildNormativeData } from './utils/norms';
@@ -8,7 +8,9 @@ import { buildNormativeData } from './utils/norms';
 // Build normalized normativeData for app usage
 const normativeData = buildNormativeData(normativeDataRaw);
 import { calculateZScore, zScoreToPercentile, getPerformanceLabel, calculateFitnessIndex, calculateFitnessAge, calculateUserResults, getDomainConfig, exportUserData } from './utils/calculations';
+import { UNITS } from './utils/units';
 import { saveUserData, loadUserData, saveAppState, loadAppState, exportAllData, clearAllData, importData, getAllBackups } from './utils/storage';
+import { UnitsProvider, useUnits } from './context/UnitsContext';
 import packageJson from '../package.json' assert { type: 'json' };
 import Onboarding from './components/Onboarding';
 
@@ -17,6 +19,13 @@ const ThemeContext = createContext();
 const DataContext = createContext();
 
 export { DataContext, ThemeContext };
+
+const exerciseLookupById = Object.values(exerciseMetricsData.exerciseMetrics || {}).reduce((acc, domainExercises) => {
+  domainExercises.forEach((exercise) => {
+    acc[exercise.id] = exercise;
+  });
+  return acc;
+}, {});
 
 const ThemeProvider = ({ children }) => {
   const [darkMode] = useState(true); // Always dark mode
@@ -35,7 +44,7 @@ const ThemeProvider = ({ children }) => {
   );
 };
 
-const DataProvider = ({ children, isDevMode, runOnboarding, clearAllAppData, loadMockData, toggleMeasurementSystem }) => {
+const DataProvider = ({ children, isDevMode, runOnboarding, clearAllAppData }) => {
   const [userData, setUserData] = useState({
     age: 26,
     gender: 'male',
@@ -51,6 +60,23 @@ const DataProvider = ({ children, isDevMode, runOnboarding, clearAllAppData, loa
     recovery: 50
   });
   const [isLoading, setIsLoading] = useState(true);
+
+  const loadMockData = () => {
+    const mockData = {
+      age: 28,
+      gender: 'male',
+      vo2max: 48,
+      measurementSystem: 'metric',
+      strength: 75,
+      endurance: 68,
+      power: 72,
+      mobility: 65,
+      bodyComp: 58,
+      recovery: 70
+    };
+    setUserData(mockData);
+    console.log('🎭 Mock data loaded:', mockData);
+  };
 
   useEffect(() => {
     // Load data from IndexedDB on mount
@@ -87,9 +113,23 @@ const DataProvider = ({ children, isDevMode, runOnboarding, clearAllAppData, loa
     }
   }, [userData, isLoading]);
 
+  const measurementSystem = userData.measurementSystem || UNITS.METRIC;
+
+  const setMeasurementSystem = useCallback(
+    (nextSystem) => {
+      setUserData(prev => ({
+        ...prev,
+        measurementSystem: nextSystem === UNITS.IMPERIAL ? UNITS.IMPERIAL : UNITS.METRIC
+      }));
+    },
+    [setUserData]
+  );
+
   return (
-    <DataContext.Provider value={{ userData, setUserData, isLoading, isDevMode, runOnboarding, clearAllAppData, loadMockData, toggleMeasurementSystem }}>
-      {children}
+    <DataContext.Provider value={{ userData, setUserData, isLoading, isDevMode, runOnboarding, clearAllAppData, loadMockData }}>
+      <UnitsProvider system={measurementSystem} setSystem={setMeasurementSystem}>
+        {children}
+      </UnitsProvider>
     </DataContext.Provider>
   );
 };
@@ -285,6 +325,7 @@ const DomainCard = ({ domain, score, percentile, zScore, icon: Icon }) => {
 const FitnessModule = () => {
   const { darkMode } = useContext(ThemeContext);
   const { userData, setUserData } = useContext(DataContext);
+  const { system, getDisplayUnit: unitsGetDisplayUnit, convertValueToDisplay: toDisplay, convertValueToBase: toBase } = useUnits();
   const [results, setResults] = useState(null);
   const [showProfileEditModal, setShowProfileEditModal] = useState(false);
   const [tempBirthdate, setTempBirthdate] = useState('');
@@ -292,11 +333,116 @@ const FitnessModule = () => {
   const [showLogModal, setShowLogModal] = useState(false);
   const [logStep, setLogStep] = useState(0);
   const [tempExercises, setTempExercises] = useState({});
+  const previousMeasurementSystemRef = useRef(system);
 
   useEffect(() => {
     const results = calculateUserResults(userData);
     setResults(results);
   }, [userData]);
+
+  const getDecimalsForUnit = (unit) => {
+    const normalized = (unit || '').toLowerCase();
+    if (normalized === 'kg' || normalized === 'lbs') {
+      return 1;
+    }
+    if (normalized === 'cm' || normalized === 'in') {
+      return 1;
+    }
+    if (normalized === 'km' || normalized === 'miles') {
+      return 2;
+    }
+    return 0;
+  };
+
+  const formatNumericValue = (value, decimals = 1) => {
+    if (!Number.isFinite(value)) {
+      return '';
+    }
+    const fixed = value.toFixed(decimals);
+    return fixed.replace(/\.0+$/, '').replace(/(\.\d*[1-9])0+$/, '$1');
+  };
+
+  const formatValueForExercise = (exercise, numericValue) => {
+    if (numericValue === undefined || numericValue === null) {
+      return '';
+    }
+    if (!Number.isFinite(numericValue)) {
+      return '';
+    }
+    const decimals = getDecimalsForUnit(exercise.unit);
+    return formatNumericValue(numericValue, decimals);
+  };
+
+  const getPlaceholderValue = (exercise) => {
+    const converted = toDisplay(exercise.unit, exercise.defaultValue, system);
+    const formatted = formatValueForExercise(exercise, converted);
+    if (formatted) {
+      return formatted;
+    }
+    if (exercise.defaultValue === undefined || exercise.defaultValue === null) {
+      return '';
+    }
+    return String(exercise.defaultValue);
+  };
+
+  const getInputValue = (exercise) => {
+    if (Object.prototype.hasOwnProperty.call(tempExercises, exercise.id)) {
+      return tempExercises[exercise.id];
+    }
+
+    const storedValue = userData.loggedExercises?.[exercise.id];
+    if (storedValue === undefined || storedValue === null || storedValue === '') {
+      return '';
+    }
+
+    const converted = toDisplay(exercise.unit, storedValue, system);
+    return formatValueForExercise(exercise, converted);
+  };
+
+  const getUnitLabel = (exercise) => unitsGetDisplayUnit(exercise.unit, system);
+
+  const closeLogModal = () => {
+    setShowLogModal(false);
+    setLogStep(0);
+    setTempExercises({});
+    previousMeasurementSystemRef.current = system;
+  };
+
+  useEffect(() => {
+    if (!showLogModal) {
+      previousMeasurementSystemRef.current = system;
+      return;
+    }
+
+    const previousSystem = previousMeasurementSystemRef.current;
+    if (previousSystem === system) {
+      return;
+    }
+
+    setTempExercises((prevInputs) => {
+      const nextInputs = {};
+      Object.entries(prevInputs).forEach(([exerciseId, value]) => {
+        const exercise = exerciseLookupById[exerciseId];
+        if (!exercise) {
+          nextInputs[exerciseId] = value;
+          return;
+        }
+
+        const numeric = parseFloat(value);
+        if (Number.isNaN(numeric)) {
+          nextInputs[exerciseId] = value;
+          return;
+        }
+
+        const baseValue = toBase(exercise.unit, numeric, previousSystem);
+        const displayValue = toDisplay(exercise.unit, baseValue, system);
+        nextInputs[exerciseId] = formatValueForExercise(exercise, displayValue);
+      });
+      return nextInputs;
+    });
+
+    previousMeasurementSystemRef.current = system;
+  }, [system, showLogModal, toBase, toDisplay]);
 
   const updateField = (field, value) => {
     setUserData(prev => ({ ...prev, [field]: parseFloat(value) || 0 }));
@@ -358,13 +504,13 @@ const FitnessModule = () => {
           </h2>
           <SpiderChart data={results.domains} darkMode={darkMode} />
           <div className="flex justify-center mt-4">
-            <button
-              onClick={() => {
-                // Initialize temp exercises with existing logged values
-                setTempExercises(userData.loggedExercises || {});
-                setLogStep(0);
-                setShowLogModal(true);
-              }}
+              <button
+                onClick={() => {
+                  setTempExercises({});
+                  setLogStep(0);
+                  previousMeasurementSystemRef.current = system;
+                  setShowLogModal(true);
+                }}
               className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white rounded-2xl transition-all duration-200"
             >
               <Database className="w-4 h-4" />
@@ -503,7 +649,7 @@ const FitnessModule = () => {
                 Log Your Progress
               </h3>
               <button
-                onClick={() => setShowLogModal(false)}
+                onClick={closeLogModal}
                 className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
               >
                 <X className="w-6 h-6" />
@@ -569,29 +715,35 @@ const FitnessModule = () => {
 
                       {/* Exercise Inputs */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {exercises.map((exercise) => (
-                          <div key={exercise.id}>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                              {exercise.name}
-                              <span className="text-gray-500 dark:text-gray-400 ml-1">
-                                ({exercise.unit})
-                              </span>
-                            </label>
-                            <input
-                              type="number"
-                              value={tempExercises[exercise.id] || ''}
-                              onChange={(e) => setTempExercises(prev => ({ 
-                                ...prev, 
-                                [exercise.id]: e.target.value 
-                              }))}
-                              placeholder={`e.g. ${exercise.defaultValue}`}
-                              className="w-full px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                            />
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                              {exercise.description}
-                            </p>
-                          </div>
-                        ))}
+                        {exercises.map((exercise) => {
+                          const unitLabel = getUnitLabel(exercise);
+                          const placeholderExample = getPlaceholderValue(exercise);
+                          const inputValue = getInputValue(exercise);
+
+                          return (
+                            <div key={exercise.id}>
+                              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                {exercise.name}
+                                <span className="text-gray-500 dark:text-gray-400 ml-1">
+                                  ({unitLabel})
+                                </span>
+                              </label>
+                              <input
+                                type="number"
+                                value={inputValue}
+                                onChange={(e) => setTempExercises(prev => ({
+                                  ...prev,
+                                  [exercise.id]: e.target.value
+                                }))}
+                                placeholder={placeholderExample ? `e.g. ${placeholderExample}` : undefined}
+                                className="w-full px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                              />
+                              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                {exercise.description}
+                              </p>
+                            </div>
+                          );
+                        })}
                       </div>
                     </motion.div>
                   );
@@ -614,18 +766,36 @@ const FitnessModule = () => {
 
               <button
                 onClick={() => {
-                  // Save only the filled exercises
+                  const normalizedEntries = Object.entries(tempExercises)
+                    .filter(([, value]) => value !== '' && value !== null && value !== undefined)
+                    .reduce((acc, [exerciseId, value]) => {
+                      const exercise = exerciseLookupById[exerciseId];
+                      const numericValue = parseFloat(value);
+
+                      if (!exercise || Number.isNaN(numericValue)) {
+                        if (!Number.isNaN(numericValue)) {
+                          acc[exerciseId] = numericValue;
+                        }
+                        return acc;
+                      }
+
+                      const baseValue = toBase(exercise.unit, numericValue, system);
+                      if (!Number.isFinite(baseValue)) {
+                        return acc;
+                      }
+
+                      acc[exerciseId] = Number(baseValue.toFixed(2));
+                      return acc;
+                    }, {});
+
                   setUserData(prev => ({
                     ...prev,
                     loggedExercises: {
                       ...prev.loggedExercises,
-                      ...Object.fromEntries(
-                        Object.entries(tempExercises).filter(([_, value]) => value !== '' && value !== null)
-                      )
+                      ...normalizedEntries
                     }
                   }));
-                  setShowLogModal(false);
-                  setLogStep(0);
+                  closeLogModal();
                 }}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-teal-500 hover:from-blue-600 hover:to-teal-600 text-white rounded-2xl transition-all duration-200"
               >
@@ -688,11 +858,13 @@ const FitnessModule = () => {
 // ==================== SHELL LAYOUT ====================
 const Shell = ({ children }) => {
   const { darkMode, setDarkMode } = useContext(ThemeContext);
-  const { userData, isDevMode, runOnboarding, clearAllAppData, loadMockData, toggleMeasurementSystem } = useContext(DataContext);
+  const { userData, isDevMode, runOnboarding, clearAllAppData, loadMockData } = useContext(DataContext);
+  const { system, toggleSystem } = useUnits();
   const [isSideNavOpen, setIsSideNavOpen] = useState(false);
   const [latestBackup, setLatestBackup] = useState(null);
   const [importingData, setImportingData] = useState(false);
   const importInputRef = useRef(null);
+  const [showClearDataModal, setShowClearDataModal] = useState(false);
 
   const exportData = async () => {
     try {
@@ -851,7 +1023,7 @@ const Shell = ({ children }) => {
               </button>
               {isDevMode && (
                 <button
-                  onClick={clearAllAppData}
+                  onClick={() => clearAllAppData()}
                   className="p-2 rounded hover:bg-red-100 dark:hover:bg-red-900 transition-colors"
                   title="🛠️ DEV: Clear All Data"
                 >
@@ -877,9 +1049,9 @@ const Shell = ({ children }) => {
                 </button>
               )}
               <button
-                onClick={toggleMeasurementSystem}
+                onClick={toggleSystem}
                 className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                title={`Switch to ${userData.measurementSystem === 'metric' ? 'Imperial' : 'Metric'} units`}
+                title={`Switch to ${system === 'metric' ? 'Imperial' : 'Metric'} units`}
               >
                 <Ruler className="w-5 h-5 text-gray-600 dark:text-gray-300" />
               </button>
@@ -949,6 +1121,14 @@ const Shell = ({ children }) => {
                     <Upload className="w-4 h-4" />
                     {importingData ? 'Importing…' : 'Import data'}
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowClearDataModal(true)}
+                    className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-md bg-red-600/90 hover:bg-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 text-white text-sm font-semibold shadow-sm transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Clear all data
+                  </button>
                 </div>
                 <div className="mt-4 rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/40 p-3">
                   <p className="text-xs font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wide">
@@ -978,7 +1158,7 @@ const Shell = ({ children }) => {
                   <div className="flex items-center justify-between text-gray-700 dark:text-gray-300">
                     <dt>Measurement</dt>
                     <dd className="font-semibold text-gray-900 dark:text-gray-100">
-                      {userData.measurementSystem === 'imperial' ? 'Imperial (lbs, miles)' : 'Metric (kg, km)'}
+                      {system === 'imperial' ? 'Imperial (lbs, miles)' : 'Metric (kg, km)'}
                     </dd>
                   </div>
                   <div className="flex items-center justify-between text-gray-700 dark:text-gray-300">
@@ -1001,6 +1181,53 @@ const Shell = ({ children }) => {
             onClick={() => setIsSideNavOpen(false)}
             aria-hidden="true"
           />
+        </div>
+      )}
+      {showClearDataModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div
+            className="absolute inset-0 bg-gray-900/70 backdrop-blur-sm"
+            onClick={() => setShowClearDataModal(false)}
+            aria-hidden="true"
+          />
+          <div className="relative w-full max-w-md rounded-xl border border-red-500/30 bg-white dark:bg-gray-900 shadow-2xl">
+            <div className="p-6">
+              <div className="flex items-start gap-3">
+                <span className="inline-flex items-center justify-center rounded-full bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-300 p-2">
+                  <AlertTriangle className="w-5 h-5" aria-hidden="true" />
+                </span>
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Permanently delete all data?</h2>
+                  <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
+                    This will erase your fitness metrics, onboarding progress, backups, and app preferences from this device. This action cannot be undone.
+                  </p>
+                </div>
+              </div>
+              <div className="mt-6 space-y-2 rounded-lg border border-red-200/40 bg-red-50/70 dark:border-red-900/60 dark:bg-red-900/30 p-3 text-xs text-red-700 dark:text-red-200">
+                <p className="font-semibold uppercase tracking-wide">Before you continue</p>
+                <p>Export your data first if you want to keep a backup. Clearing data will remove all saved copies from this browser.</p>
+              </div>
+              <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                <button
+                  type="button"
+                  onClick={() => setShowClearDataModal(false)}
+                  className="inline-flex items-center justify-center rounded-md border border-gray-300 dark:border-gray-700 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    setShowClearDataModal(false);
+                    await clearAllAppData({ requireConfirm: false });
+                  }}
+                  className="inline-flex items-center justify-center rounded-md bg-red-600 hover:bg-red-700 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+                >
+                  Delete everything
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>
@@ -1039,38 +1266,18 @@ const App = () => {
     }
   }, []);
 
-  const loadMockData = () => {
-    const mockData = {
-      age: 28,
-      gender: 'male',
-      vo2max: 48,
-      measurementSystem: 'metric',
-      strength: 75,
-      endurance: 68,
-      power: 72,
-      mobility: 65,
-      bodyComp: 58,
-      recovery: 70
-    };
-    setUserData(mockData);
-    console.log('🎭 Mock data loaded:', mockData);
-  };
-
   const runOnboarding = () => {
     setShowOnboarding(true);
   };
 
-  const clearAllAppData = async () => {
-    if (window.confirm('⚠️ Clear ALL app data? This cannot be undone!\n\nThis will reset onboarding, user data, and all settings.')) {
+  const clearAllAppData = async ({ requireConfirm = true } = {}) => {
+    const performClear = async () => {
       try {
         const success = await clearAllData();
         if (success) {
-          // Clear localStorage as well
           localStorage.clear();
-          // Reset app state
           setOnboardingComplete(false);
           setAppLoading(true);
-          // Reload the page to reset everything
           window.location.reload();
         } else {
           alert('Failed to clear data. Check console for errors.');
@@ -1079,12 +1286,16 @@ const App = () => {
         console.error('Error clearing data:', error);
         alert('Error clearing data. Check console for details.');
       }
-    }
-  };
+    };
 
-  const toggleMeasurementSystem = () => {
-    const newSystem = userData.measurementSystem === 'metric' ? 'imperial' : 'metric';
-    setUserData(prev => ({ ...prev, measurementSystem: newSystem }));
+    if (!requireConfirm) {
+      await performClear();
+      return;
+    }
+
+    if (window.confirm('⚠️ Clear ALL app data? This cannot be undone!\n\nThis will reset onboarding, user data, and all settings.')) {
+      await performClear();
+    }
   };
 
   useEffect(() => {
@@ -1122,7 +1333,7 @@ const App = () => {
   if (!onboardingComplete && !isDevMode) {
     return (
       <ThemeProvider>
-        <DataProvider isDevMode={isDevMode} runOnboarding={runOnboarding} clearAllAppData={clearAllAppData} loadMockData={loadMockData} toggleMeasurementSystem={toggleMeasurementSystem}>
+        <DataProvider isDevMode={isDevMode} runOnboarding={runOnboarding} clearAllAppData={clearAllAppData}>
           <Onboarding onComplete={handleOnboardingComplete} />
         </DataProvider>
       </ThemeProvider>
@@ -1132,7 +1343,7 @@ const App = () => {
   if (showOnboarding) {
     return (
       <ThemeProvider>
-        <DataProvider isDevMode={isDevMode} runOnboarding={runOnboarding} clearAllAppData={clearAllAppData} loadMockData={loadMockData} toggleMeasurementSystem={toggleMeasurementSystem}>
+        <DataProvider isDevMode={isDevMode} runOnboarding={runOnboarding} clearAllAppData={clearAllAppData}>
           <Onboarding onComplete={() => {
             setShowOnboarding(false);
             handleOnboardingComplete();
@@ -1144,7 +1355,7 @@ const App = () => {
 
   return (
     <ThemeProvider>
-      <DataProvider isDevMode={isDevMode} runOnboarding={runOnboarding} clearAllAppData={clearAllAppData} loadMockData={loadMockData} toggleMeasurementSystem={toggleMeasurementSystem}>
+      <DataProvider isDevMode={isDevMode} runOnboarding={runOnboarding} clearAllAppData={clearAllAppData}>
         <Shell>
           <FitnessModule />
         </Shell>
