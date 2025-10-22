@@ -1,4 +1,4 @@
-import React, { useState, useEffect, createContext, useContext, useRef } from 'react';
+import React, { useState, useEffect, createContext, useContext, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Download, Zap, Battery, Droplet, Heart, TrendingUp, Trash2, Ruler, Play, Database, Upload, X, Info, Menu, Edit, ChevronLeft, ChevronRight, AlertTriangle } from 'lucide-react';
 import normativeDataRaw from './data/exercise_metrics.json' assert { type: 'json' };
@@ -8,8 +8,9 @@ import { buildNormativeData } from './utils/norms';
 // Build normalized normativeData for app usage
 const normativeData = buildNormativeData(normativeDataRaw);
 import { calculateZScore, zScoreToPercentile, getPerformanceLabel, calculateFitnessIndex, calculateFitnessAge, calculateUserResults, getDomainConfig, exportUserData } from './utils/calculations';
-import { UNITS, getDisplayUnit, convertValueToDisplay, convertValueToBase, SUGGESTED_IMPERIAL_WEIGHTS } from './utils/units';
+import { UNITS } from './utils/units';
 import { saveUserData, loadUserData, saveAppState, loadAppState, exportAllData, clearAllData, importData, getAllBackups } from './utils/storage';
+import { UnitsProvider, useUnits } from './context/UnitsContext';
 import packageJson from '../package.json' assert { type: 'json' };
 import Onboarding from './components/Onboarding';
 
@@ -77,13 +78,6 @@ const DataProvider = ({ children, isDevMode, runOnboarding, clearAllAppData }) =
     console.log('🎭 Mock data loaded:', mockData);
   };
 
-  const toggleMeasurementSystem = () => {
-    setUserData(prev => ({
-      ...prev,
-      measurementSystem: prev.measurementSystem === 'metric' ? 'imperial' : 'metric'
-    }));
-  };
-
   useEffect(() => {
     // Load data from IndexedDB on mount
     const loadData = async () => {
@@ -119,9 +113,23 @@ const DataProvider = ({ children, isDevMode, runOnboarding, clearAllAppData }) =
     }
   }, [userData, isLoading]);
 
+  const measurementSystem = userData.measurementSystem || UNITS.METRIC;
+
+  const setMeasurementSystem = useCallback(
+    (nextSystem) => {
+      setUserData(prev => ({
+        ...prev,
+        measurementSystem: nextSystem === UNITS.IMPERIAL ? UNITS.IMPERIAL : UNITS.METRIC
+      }));
+    },
+    [setUserData]
+  );
+
   return (
-    <DataContext.Provider value={{ userData, setUserData, isLoading, isDevMode, runOnboarding, clearAllAppData, loadMockData, toggleMeasurementSystem }}>
-      {children}
+    <DataContext.Provider value={{ userData, setUserData, isLoading, isDevMode, runOnboarding, clearAllAppData, loadMockData }}>
+      <UnitsProvider system={measurementSystem} setSystem={setMeasurementSystem}>
+        {children}
+      </UnitsProvider>
     </DataContext.Provider>
   );
 };
@@ -317,6 +325,7 @@ const DomainCard = ({ domain, score, percentile, zScore, icon: Icon }) => {
 const FitnessModule = () => {
   const { darkMode } = useContext(ThemeContext);
   const { userData, setUserData } = useContext(DataContext);
+  const { system, getDisplayUnit: unitsGetDisplayUnit, convertValueToDisplay: toDisplay, convertValueToBase: toBase } = useUnits();
   const [results, setResults] = useState(null);
   const [showProfileEditModal, setShowProfileEditModal] = useState(false);
   const [tempBirthdate, setTempBirthdate] = useState('');
@@ -324,8 +333,7 @@ const FitnessModule = () => {
   const [showLogModal, setShowLogModal] = useState(false);
   const [logStep, setLogStep] = useState(0);
   const [tempExercises, setTempExercises] = useState({});
-  const measurementSystem = userData.measurementSystem || UNITS.METRIC;
-  const previousMeasurementSystemRef = useRef(measurementSystem);
+  const previousMeasurementSystemRef = useRef(system);
 
   useEffect(() => {
     const results = calculateUserResults(userData);
@@ -366,7 +374,7 @@ const FitnessModule = () => {
   };
 
   const getPlaceholderValue = (exercise) => {
-    const converted = convertValueToDisplay(exercise.unit, exercise.defaultValue, measurementSystem);
+    const converted = toDisplay(exercise.unit, exercise.defaultValue, system);
     const formatted = formatValueForExercise(exercise, converted);
     if (formatted) {
       return formatted;
@@ -387,27 +395,27 @@ const FitnessModule = () => {
       return '';
     }
 
-    const converted = convertValueToDisplay(exercise.unit, storedValue, measurementSystem);
+    const converted = toDisplay(exercise.unit, storedValue, system);
     return formatValueForExercise(exercise, converted);
   };
 
-  const getUnitLabel = (exercise) => getDisplayUnit(exercise.unit, measurementSystem);
+  const getUnitLabel = (exercise) => unitsGetDisplayUnit(exercise.unit, system);
 
   const closeLogModal = () => {
     setShowLogModal(false);
     setLogStep(0);
     setTempExercises({});
-    previousMeasurementSystemRef.current = measurementSystem;
+    previousMeasurementSystemRef.current = system;
   };
 
   useEffect(() => {
     if (!showLogModal) {
-      previousMeasurementSystemRef.current = measurementSystem;
+      previousMeasurementSystemRef.current = system;
       return;
     }
 
     const previousSystem = previousMeasurementSystemRef.current;
-    if (previousSystem === measurementSystem) {
+    if (previousSystem === system) {
       return;
     }
 
@@ -426,15 +434,15 @@ const FitnessModule = () => {
           return;
         }
 
-        const baseValue = convertValueToBase(exercise.unit, numeric, previousSystem);
-        const displayValue = convertValueToDisplay(exercise.unit, baseValue, measurementSystem);
+        const baseValue = toBase(exercise.unit, numeric, previousSystem);
+        const displayValue = toDisplay(exercise.unit, baseValue, system);
         nextInputs[exerciseId] = formatValueForExercise(exercise, displayValue);
       });
       return nextInputs;
     });
 
-    previousMeasurementSystemRef.current = measurementSystem;
-  }, [measurementSystem, showLogModal]);
+    previousMeasurementSystemRef.current = system;
+  }, [system, showLogModal, toBase, toDisplay]);
 
   const updateField = (field, value) => {
     setUserData(prev => ({ ...prev, [field]: parseFloat(value) || 0 }));
@@ -500,7 +508,7 @@ const FitnessModule = () => {
                 onClick={() => {
                   setTempExercises({});
                   setLogStep(0);
-                  previousMeasurementSystemRef.current = measurementSystem;
+                  previousMeasurementSystemRef.current = system;
                   setShowLogModal(true);
                 }}
               className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white rounded-2xl transition-all duration-200"
@@ -771,7 +779,7 @@ const FitnessModule = () => {
                         return acc;
                       }
 
-                      const baseValue = convertValueToBase(exercise.unit, numericValue, measurementSystem);
+                      const baseValue = toBase(exercise.unit, numericValue, system);
                       if (!Number.isFinite(baseValue)) {
                         return acc;
                       }
@@ -850,7 +858,8 @@ const FitnessModule = () => {
 // ==================== SHELL LAYOUT ====================
 const Shell = ({ children }) => {
   const { darkMode, setDarkMode } = useContext(ThemeContext);
-  const { userData, isDevMode, runOnboarding, clearAllAppData, loadMockData, toggleMeasurementSystem } = useContext(DataContext);
+  const { userData, isDevMode, runOnboarding, clearAllAppData, loadMockData } = useContext(DataContext);
+  const { system, toggleSystem } = useUnits();
   const [isSideNavOpen, setIsSideNavOpen] = useState(false);
   const [latestBackup, setLatestBackup] = useState(null);
   const [importingData, setImportingData] = useState(false);
@@ -1040,9 +1049,9 @@ const Shell = ({ children }) => {
                 </button>
               )}
               <button
-                onClick={toggleMeasurementSystem}
+                onClick={toggleSystem}
                 className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                title={`Switch to ${userData.measurementSystem === 'metric' ? 'Imperial' : 'Metric'} units`}
+                title={`Switch to ${system === 'metric' ? 'Imperial' : 'Metric'} units`}
               >
                 <Ruler className="w-5 h-5 text-gray-600 dark:text-gray-300" />
               </button>
@@ -1149,7 +1158,7 @@ const Shell = ({ children }) => {
                   <div className="flex items-center justify-between text-gray-700 dark:text-gray-300">
                     <dt>Measurement</dt>
                     <dd className="font-semibold text-gray-900 dark:text-gray-100">
-                      {userData.measurementSystem === 'imperial' ? 'Imperial (lbs, miles)' : 'Metric (kg, km)'}
+                      {system === 'imperial' ? 'Imperial (lbs, miles)' : 'Metric (kg, km)'}
                     </dd>
                   </div>
                   <div className="flex items-center justify-between text-gray-700 dark:text-gray-300">

@@ -2,25 +2,25 @@ import React, { useState, useContext } from 'react';
 import { ChevronLeft, ChevronRight, Check, Heart, Zap, TrendingUp, Droplet, Battery } from 'lucide-react';
 import { DataContext } from '../App';
 import { saveAppState } from '../utils/storage';
-import { UNITS, getDisplayUnit, convertValueToDisplay, convertValueToBase, SUGGESTED_IMPERIAL_WEIGHTS } from '../utils/units';
+import { SUGGESTED_IMPERIAL_WEIGHTS } from '../utils/units';
+import { useUnits } from '../context/UnitsContext';
 import starkLogo from '../assets/stark_logo_rounded.png';
 import starkPersonHealth from '../assets/stark_personhealth.png';
 
 const Onboarding = ({ onComplete }) => {
   const { userData, setUserData } = useContext(DataContext);
+  const { system, isImperial, getDisplayUnit, convertValueToDisplay, convertValueToBase, setSystem } = useUnits();
   const [currentStep, setCurrentStep] = useState(0);
 
-  const measurementSystem = userData.measurementSystem || UNITS.METRIC;
-
-  const getWeightUnit = () => getDisplayUnit('kg', measurementSystem);
-  const getHeightUnit = () => getDisplayUnit('cm', measurementSystem);
+  const getWeightUnit = () => getDisplayUnit('kg');
+  const getHeightUnit = () => getDisplayUnit('cm');
 
   const formatDisplayValue = (unit, baseValue, decimals = 1) => {
     if (baseValue === undefined || baseValue === null || baseValue === '') {
       return '';
     }
 
-    const converted = convertValueToDisplay(unit, baseValue, measurementSystem);
+    const converted = convertValueToDisplay(unit, baseValue);
     if (!Number.isFinite(converted)) {
       return '';
     }
@@ -31,7 +31,7 @@ const Onboarding = ({ onComplete }) => {
 
   const getInputValue = (field, unit, decimals = 1) => formatDisplayValue(unit, userData[field], decimals);
   const getPlaceholderValue = (field, unit, baseValue, decimals = 1) => {
-    if (measurementSystem === UNITS.IMPERIAL) {
+    if (isImperial) {
       const override = SUGGESTED_IMPERIAL_WEIGHTS[field];
       if (override !== undefined) {
         return String(override);
@@ -114,7 +114,7 @@ const Onboarding = ({ onComplete }) => {
         if (Number.isNaN(numeric)) {
           return prev;
         }
-        const baseValue = convertValueToBase(unit, numeric, measurementSystem);
+        const baseValue = convertValueToBase(unit, numeric);
         return { ...prev, [field]: baseValue };
       }
 
@@ -257,8 +257,8 @@ const Onboarding = ({ onComplete }) => {
                 Measurement System
               </label>
               <select
-                value={userData.measurementSystem || 'metric'}
-                onChange={(e) => setUserData(prev => ({ ...prev, measurementSystem: e.target.value }))}
+                value={system}
+                onChange={(e) => setSystem(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               >
                 <option value="metric">Metric (kg, cm, km)</option>

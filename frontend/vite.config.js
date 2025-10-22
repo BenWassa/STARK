@@ -15,5 +15,8 @@ export default defineConfig({
         dev: './dev.html'
       }
     }
+  },
+  test: {
+    environment: 'node'
   }
 })
