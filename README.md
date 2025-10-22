@@ -35,36 +35,40 @@ STARK turns complex performance data into an elegant dashboard where users can e
 
 ```
 STARK/
-├── .github/
-│   └── workflows/
-│       └── deploy.yml       # Automated deployment workflow
-├── frontend/
-│   ├── public/
-│   │   ├── manifest.json    # PWA manifest
-│   │   ├── sw.js            # Service worker for offline support
-│   │   └── icons/           # PWA icons (192x192, 512x512)
-│   ├── src/
-│   │   ├── components/
-│   │   │   └── Onboarding.jsx  # Multi-step user onboarding
-│   │   ├── data/
-│   │   │   └── exercise_metrics.json  # Normative fitness data
-│   │   ├── utils/
-│   │   │   ├── calculations.js  # Fitness scoring algorithms
-│   │   │   ├── norms.js         # Data normalization utilities
-│   │   │   ├── storage.js       # IndexedDB operations
-│   │   │   └── units.js         # Metric/Imperial conversions
-│   │   ├── App.jsx          # Main application component
-│   │   ├── main.jsx         # React entry point
-│   │   └── index.css        # TailwindCSS styles
-│   ├── index.html           # Production entry
-│   ├── dev.html             # Development entry (with dev mode)
-│   ├── package.json
-│   ├── vite.config.js
-│   └── tailwind.config.js
-└── docs/                    # Build output for GitHub Pages
-    ├── index.html
-    ├── dev.html
-    └── assets/
+  .github/
+    workflows/
+      deploy.yml            # Automated deployment workflow
+  frontend/
+    public/
+      manifest.json         # PWA manifest
+      sw.js                 # Service worker for offline support
+      icons/                # PWA icons (192x192, 512x512)
+    src/
+      components/
+        Onboarding.jsx      # Multi-step user onboarding
+      context/
+        UnitsContext.jsx    # Global measurement system provider
+      data/
+        exercise_metrics.json  # Normative fitness data
+      utils/
+        calculations.js     # Fitness scoring algorithms
+        norms.js            # Data normalization utilities
+        storage.js          # IndexedDB operations
+        units.js            # Metric/Imperial conversions
+        units.test.js       # Vitest coverage for conversion helpers
+      App.jsx               # Main application component
+      main.jsx              # React entry point
+      index.css             # TailwindCSS styles
+    index.html              # Production entry
+    dev.html                # Development entry (with dev mode)
+    package.json
+    vite.config.js
+  docs/                     # Build output for GitHub Pages
+    index.html
+    dev.html
+    assets/
+    sprint1_*.md            # Sprint audit + QA notes
+  tailwind.config.js
 ```
 
 ---
@@ -92,6 +96,7 @@ cd frontend
 npm install
 npm run dev          # Start development server at http://localhost:5173
 npm run build        # Build for production (outputs to ../docs)
+npm run test         # Run Vitest unit suite
 npm run preview      # Preview production build
 npm run check-versions  # Verify all version files are consistent
 ```
@@ -103,6 +108,7 @@ cd frontend
 & "C:\Users\$env:USERNAME\node-v22.20.0-win-x64\npm.cmd" install
 & "C:\Users\$env:USERNAME\node-v22.20.0-win-x64\npm.cmd" run dev
 & "C:\Users\$env:USERNAME\node-v22.20.0-win-x64\npm.cmd" run build
+& "C:\Users\$env:USERNAME\node-v22.20.0-win-x64\npm.cmd" run test
 ```
 
 ### GitHub Pages Setup
@@ -302,7 +308,7 @@ All metrics converted to standardized z-scores, then mapped to percentiles for c
 - [ ] Export reports as PDF/shareable images
 
 ### Technical Improvements
-- [ ] Automated testing suite (Vitest + React Testing Library)
+- [ ] Expand automated testing coverage (Vitest + React Testing Library)
 - [ ] TypeScript migration for type safety
 - [ ] Enhanced PWA features (push notifications for workout reminders)
 - [ ] Multi-language support (i18n)
@@ -358,7 +364,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ---
 
-**Current Version:** 1.4.0
+**Current Version:** 1.4.4
 **Repository:** [github.com/BenWassa/STARK](https://github.com/BenWassa/STARK)  
 **Live Demo:** [benwassa.github.io/STARK](https://benwassa.github.io/STARK)
 
@@ -366,3 +372,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 > "Build a little church, not a cathedral."  
 > Simple tools for understanding complex bodies.
+
+
+
+
+
+
+
+
